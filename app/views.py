@@ -36,9 +36,7 @@ def login():
     if request.method == "POST":
             username = request.json['username']
             password = request.json['password']
-            session['id']= username  
-            global new_user 
-            new_ser = username             
+            session['username']= username            
             msg = user_object.login(username, password)
             response = msg
             return response
@@ -116,6 +114,15 @@ def reset_password():
         cpassword = request.json['cpassword']
         msg = user_object.changePassword(npassword,cpassword)
         return msg
+
+@app.route('/api/v1/logout', methods=['POST'])
+def logout():
+    # Logging out
+    new = session['username']
+    if new:
+        session.pop('username', None)
+        return jsonify({"message": "Logout successful"})
+    return jsonify({"message": "You are not logged in"})
         
 
 
