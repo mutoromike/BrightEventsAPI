@@ -10,6 +10,7 @@ application has originated from the fact that people need to have access to even
 
 ## Build Status
 
+[![Build Status](https://travis-ci.org/mutoromike/BrightEventsAPI.svg?branch=master)](https://travis-ci.org/mutoromike/BrightEventsAPI)
 
 
 ## Tech/Framework used
