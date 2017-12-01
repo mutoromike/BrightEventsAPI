@@ -10,7 +10,9 @@ application has originated from the fact that people need to have access to even
 
 ## Build Status
 
-[![Build Status](https://travis-ci.org/mutoromike/BrightEventsAPI.svg?branch=master)](https://travis-ci.org/mutoromike/BrightEventsAPI)
+[![Build Status](https://travis-ci.org/mutoromike/BrightEventsAPI.svg?branch=master)](https://travis-ci.org/mutoromike/BrightEventsAPI)   
+
+[![Coverage Status](https://coveralls.io/repos/github/mutoromike/BrightEventsAPI/badge.svg?branch=master)](https://coveralls.io/github/mutoromike/BrightEventsAPI?branch=master)
 
 
 ## Tech/Framework used
