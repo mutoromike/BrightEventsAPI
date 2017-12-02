@@ -68,12 +68,6 @@ def edit_event(eventId):
         user = request.json["username"]
         update_event = events_obj.editEvent(edit_name, old_name, user)
         return jsonify(update_event)
-        # if == "" or update_event==""
-        # register jsonify(mess = "")
-        # eles:
-        # jsonify({ mess = ",
-
-        #    = update_event})
 
 @app.route('/api/v1/event/<eventId>', methods=['DELETE'])
 def delete_event(eventId):
