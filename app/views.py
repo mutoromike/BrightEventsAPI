@@ -7,7 +7,7 @@ from app import app, user_object, events_obj, eventdetails_obj
 user = None
 
 
-@app.route('/api/v1')
+@app.route('/')
 def index():
     # Render index page
     
