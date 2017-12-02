@@ -7,11 +7,11 @@ from app import app, user_object, events_obj, eventdetails_obj
 user = None
 
 
-@app.route('/')
+@app.route('/api/v1')
 def index():
     # Render index page
     
-    return render_template("index.html")
+    return jsonify({"message": "Welcome to Bright Events"})
 
 
 @app.route('/api/v1/auth/register', methods=['GET', 'POST'])
