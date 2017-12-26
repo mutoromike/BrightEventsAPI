@@ -16,7 +16,7 @@ def index():
 
 @app.route('/api/v1/auth/register', methods=['GET', 'POST'])
 def register():
-    # User registeration
+    # User registration
     
     if request.method == "POST":
             username = request.json['username']
@@ -27,6 +27,7 @@ def register():
                            
             msg = user_object.registerUser(username, email, password, cpassword)
             response = msg
+            response.status_code = 201
             return response
 
 @app.route('/api/v1/auth/login', methods=['GET', 'POST'])
