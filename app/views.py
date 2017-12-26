@@ -26,7 +26,7 @@ def register():
             cpassword = request.json['cpassword']
                            
             msg = user_object.registerUser(username, email, password, cpassword)
-            response = msg
+            response = jsonify(msg)
             response.status_code = 201
             return response
 
