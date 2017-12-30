@@ -54,8 +54,9 @@ def event():
             date = request.json['date']
 
             msg = events_obj.createEvent(event_name, user, category, location, date)
-            response = msg
-            return jsonify(response)
+            response = jsonify(msg)
+            response.status_code = 201
+            return response
         elif request.method == "GET":
             event = events_obj.allEvents()
             
