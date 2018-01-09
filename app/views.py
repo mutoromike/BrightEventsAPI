@@ -1,22 +1,23 @@
+""" view file to handle views """
 from functools import wraps
 from flask import render_template, request, session, jsonify
 from flask_login import login_manager
 from app import app, user_object, events_obj, eventdetails_obj
 
-# Variable stores user's email
+""" Variable stores user's email """
 user = None
 
 
 @app.route('/')
 def index():
-    # Render index page
+    """ Render index page """
     
     return jsonify({"message": "Welcome to Bright Events"})
 
 
 @app.route('/api/v1/auth/register', methods=['GET', 'POST'])
 def register():
-    # User registration
+    """ User registration """
     
     if request.method == "POST":
             username = request.json['username']
@@ -32,7 +33,7 @@ def register():
 
 @app.route('/api/v1/auth/login', methods=['GET', 'POST'])
 def login():
-    # User login
+    """ User login """
     
     if request.method == "POST":
             username = request.json['username']
@@ -44,7 +45,7 @@ def login():
 
 @app.route('/api/v1/event', methods=['GET', 'POST'])
 def event():
-    # create event
+    """ create event """
     if session.get('username') is not None:
         if request.method == "POST":
             event_name = request.json['event_name']
@@ -65,7 +66,7 @@ def event():
 
 @app.route('/api/v1/events/<eventId>', methods=['PUT'])
 def edit_event(eventId):
-    # edit event
+    """ edit event """
     if session.get('username') is not None:
         if request.method == "PUT":
             old_name = eventId
@@ -77,7 +78,7 @@ def edit_event(eventId):
 
 @app.route('/api/v1/event/<eventId>', methods=['DELETE'])
 def delete_event(eventId):
-    # delete event
+    """ delete event """
     if session.get('username') is not None:
         event_name = eventId
         user = session['username']
@@ -88,7 +89,7 @@ def delete_event(eventId):
 
 @app.route('/api/v1/event/<eventid>/rsvp', methods=['GET','POST'])
 def rsvp(eventid):
-	# Allowing a user to RSVP to an event
+	# Allowing a user to RSVP to an event """    
     if session.get('username') is not None:
         if request.method == 'POST':
             event_name = eventid
@@ -112,7 +113,7 @@ def rsvp(eventid):
 
 @app.route('/api/v1/auth/reset-password', methods=['POST'])
 def reset_password():
-    #Reseting password
+    """ Reseting password """
     if request.method == "POST":
         npassword = request.json['npassword']
         cpassword = request.json['cpassword']
@@ -121,7 +122,7 @@ def reset_password():
 
 @app.route('/api/v1/logout', methods=['POST'])
 def logout():
-    # # Logging out
+    """ Logging out """
     if session.get('username') is not None:
         session.pop('username', None)
         return jsonify({"message": "Logout successful"})
