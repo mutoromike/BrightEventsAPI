@@ -58,7 +58,8 @@ To run tests and ensure the application works:
 - Register to create an account
 - Login using username and password created
 - After signing in you can proceed to create events or RSVP to other events
-- To preview the UI, proceed to `https://mutoromike.github.io/`
+- To preview the UI, proceed to `https://bright-events-application.herokuapp.com/`
+- Access the API documentation at "https://brighteventsapi1.docs.apiary.io/#reference/0/user"
 
 
 

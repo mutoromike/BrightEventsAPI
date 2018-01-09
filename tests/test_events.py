@@ -1,35 +1,36 @@
-# Test events
+""" File to handle testing of events """
 import unittest
 from app.events import EventsClass
 
 
 class TestCasesEvents(unittest.TestCase):
-    # Test for special character in event names
-    # Test for owner of events
-    # Test for correct output(event creation)
-    # Test for deletion of existing event
-    # Test for editing event names
+    """ Test for special character in event names
+        Test for owner of events
+        Test for correct output(event creation)
+        Test for deletion of existing event
+        Test for editing event names
+    """
     
 
     def setUp(self):
-        # Setting up EventsClass
+        """ Setting up EventsClass """
         
         self.events_class_obj = EventsClass()
 
     def tearDown(self):
-        # Removing EventsClass
+        """ Removing EventsClass """
         
         del self.events_class_obj
     
     def test_special_characters(self):
-        # Check for special characters in event name
+        """ Check for special characters in event name """
         
         user = "mike@gmail.com"
         msg = self.events_class_obj.createEvent("Back.to-School", "soft*%ware", "nairo@&", "23/23/23", user)
         self.assertEqual(msg, "No special characters (. , ! space [] )")
 
     def test_return_of_all_events(self):
-        # Check for all events in the system
+        """ Check for all events in the system """
         self.events_class_obj.events_list = [{'owner': 'mike@gmail.com', 'name': 'TeccDay', 'category': 'Software', 
                                                 'location': 'Nairobi', 'date': '21/3/2017'},
                                                  {'owner': 'boris@gmail.com','name': 'Eatery', 'category': 'Food', 
@@ -40,7 +41,7 @@ class TestCasesEvents(unittest.TestCase):
         self.assertEqual(msg, value)                                 
     
     def test_owner(self):
-        # Check for events belonging to owner
+        """ Check for events belonging to owner """
         self.events_class_obj.events_list = [{'owner': 'mike@gmail.com', 'name': 'TeccDay', 'category': 'Software', 
                                                 'location': 'Nairobi', 'date': '21/3/2017'},
                                                  {'owner': 'boris@gmail.com','name': 'Eatery', 'category': 'Food', 
@@ -51,7 +52,7 @@ class TestCasesEvents(unittest.TestCase):
                                 'location': 'Nairobi', 'date': '21/3/2017'}])
 
     def test_correct_output(self):
-        # Check for correct event creation
+        """ Check for correct event creation """
         
         msg = self.events_class_obj.createEvent(
             'TechDay', "mike@gmail.com", "Software", "Nairobi", "21/12/2017")
@@ -60,7 +61,7 @@ class TestCasesEvents(unittest.TestCase):
                         'location': 'Nairobi', 'date': '21/12/2017'}])
 
     def test_editing_event(self):
-        # Check for edits to event name
+        """ Check for edits to event name """
         
         self.events_class_obj.events_list = [{'owner': 'mike@gmail.com', 'name': 'Thanks Giving'}, {
             'owner': 'mike@gmail.com', 'name': 'Easter'}]
@@ -71,7 +72,7 @@ class TestCasesEvents(unittest.TestCase):
    
 
     def test_delete_event(self):
-        #Check to see if event is deleted
+        """ Check to see if event is deleted """
         
         self.events_class_obj.events_list = \
         [{'owner': 'mike@gmail.com', 'name': 'TechDay'}, \
