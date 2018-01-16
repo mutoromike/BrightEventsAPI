@@ -4,6 +4,9 @@
 
 from app import db
 from flask_bcrypt import Bcrypt
+import jwt
+from datetime import datetime, timedelta
+from flask import current_app
 
 class User(db.Model):
     """
@@ -12,9 +15,10 @@ class User(db.Model):
     __tablename__ = "users"
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    username = db.Column(db.String(128))
+    username = db.Column(db.String(128), unique=True)
     email = db.Column(db.String(128))
     password = db.Column(db.String(256))
+    # events = db.relationship('Events', backref='created_by', cascade="all, delete-orphan")
 
     def __init__(self, username, email, password):
         """
@@ -40,6 +44,43 @@ class User(db.Model):
         db.session.add(self)
         db.session.commit()
 
+    def generate_token(self, user_id):
+        """ Generates the access token"""
+
+        try:
+            # set up a payload with an expiration time
+            payload = {
+                'exp': datetime.utcnow() + timedelta(minutes=5),
+                'iat': datetime.utcnow(),
+                'sub': user_id
+            }
+            # create the byte string token using the payload and the SECRET key
+            jwt_string = jwt.encode(
+                payload,
+                current_app.config.get('SECRET_KEY'),
+                algorithm='HS512'
+            )
+            return jwt_string
+
+        except Exception as e:
+            # return an error in string format if an exception occurs
+            return str(e)
+
+    @staticmethod
+    def decode_token(token):
+        """Decodes the access token from the Authorization header."""
+        try:
+            # try to decode the token using our SECRET variable
+            payload = jwt.decode(token, current_app.config.get('SECRET_KEY'))
+            return payload['sub']
+        except jwt.ExpiredSignatureError:
+            # the token is expired, return an error string
+            return "Expired token. Please login to get a new token"
+        except jwt.InvalidTokenError:
+            # the token is invalid, return an error string
+            return "Invalid token. Please register or login"
+
+
 
 class Events(db.Model):
     """
@@ -55,9 +96,9 @@ class Events(db.Model):
     location = db.Column(db.String(128))
     date = db.Column(db.String(255))
     description = db.Column(db.String(16384))
-    created_by = db.Column(db.Integer, db.ForeignKey(User.id))
+    # created_by = db.Column(db.Integer, db.ForeignKey(User.id))
 
-    def __init__(self, name, created_by):
+    def __init__(self, name, category, location, date, description):
         """
         Initialize an event with all its details
         """
@@ -66,7 +107,7 @@ class Events(db.Model):
         self.location = location
         self.date = date
         self.description = description
-        self.created_by = created_by
+        # self.created_by = created_by
 
     def save(self):
         """
@@ -96,3 +137,4 @@ class Events(db.Model):
         """
         return "<Events: {}>".format(self.name)
 
+    
