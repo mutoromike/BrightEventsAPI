@@ -18,6 +18,7 @@ class TestingConfig(Config):
     """ Configurations for Testing, with a separate test database."""
     TESTING = True
     DEBUG = True
+    SECRET_KEY = "tonystarktheironman"
     SQLALCHEMY_DATABASE_URI = postgres_local_base + test_db
 
 class StagingConfig(Config):
