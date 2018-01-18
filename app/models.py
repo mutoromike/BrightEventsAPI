@@ -18,7 +18,7 @@ class User(db.Model):
     username = db.Column(db.String(128), unique=True)
     email = db.Column(db.String(128))
     password = db.Column(db.String(256))
-    # events = db.relationship('Events', backref='created_by', cascade="all, delete-orphan")
+    events = db.relationship('Events', order_by='Events.id', cascade="all, delete-orphan")
 
     def __init__(self, username, email, password):
         """
@@ -50,7 +50,7 @@ class User(db.Model):
         try:
             # set up a payload with an expiration time
             payload = {
-                'exp': datetime.utcnow() + timedelta(minutes=5),
+                'exp': datetime.utcnow() + timedelta(minutes=60),
                 'iat': datetime.utcnow(),
                 'sub': user_id
             }
@@ -96,18 +96,18 @@ class Events(db.Model):
     location = db.Column(db.String(128))
     date = db.Column(db.String(255))
     description = db.Column(db.String(16384))
-    # created_by = db.Column(db.Integer, db.ForeignKey(User.id))
+    created_by = db.Column(db.Integer, db.ForeignKey(User.id))
 
-    def __init__(self, name, category, location, date, description):
-        """
-        Initialize an event with all its details
-        """
-        self.name = name
-        self.category = category
-        self.location = location
-        self.date = date
-        self.description = description
-        # self.created_by = created_by
+    # def __init__(self, name, category, location, date, description, created_by):
+    #     """
+    #     Initialize an event with all its details
+    #     """
+    #     self.name = name
+    #     self.category = category
+    #     self.location = location
+    #     self.date = date
+    #     self.description = description
+    #     self.created_by = created_by
 
     def save(self):
         """
