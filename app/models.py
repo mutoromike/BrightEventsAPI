@@ -127,4 +127,9 @@ class Events(db.Model):
         """
         return "<Events: {}>".format(self.name)
 
+rsvp = db.Table('rsvp',
+	db.Column('user_id', db.Integer, db.ForeignKey('users.id')),
+	db.Column('event_id', db.Integer, db.ForeignKey('events.id'))
+	)
+
     
