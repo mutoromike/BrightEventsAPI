@@ -98,17 +98,7 @@ class Events(db.Model):
     description = db.Column(db.String(16384))
     created_by = db.Column(db.Integer, db.ForeignKey(User.id))
 
-    # def __init__(self, name, category, location, date, description, created_by):
-    #     """
-    #     Initialize an event with all its details
-    #     """
-    #     self.name = name
-    #     self.category = category
-    #     self.location = location
-    #     self.date = date
-    #     self.description = description
-    #     self.created_by = created_by
-
+    
     def save(self):
         """
         Save events,this applies for both creating a 
