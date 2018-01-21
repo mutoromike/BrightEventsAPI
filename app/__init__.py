@@ -85,7 +85,7 @@ def create_app(config_name):
 				return make_response(jsonify(response)), 401
 
 	@app.route('/api/v2/event/<int:id>', methods=['GET', 'PUT', 'DELETE'])
-	def manipulate_event(id, **kwargs):
+	def event_tasks(id, **kwargs):
 		# get the access token from the authorization header
 		auth_header = request.headers.get('Authorization')
 		access_token = auth_header
@@ -151,6 +151,52 @@ def create_app(config_name):
 					'message': message
 				}
 				# return an error response, telling the user he is Unauthorized
+				return make_response(jsonify(response)), 401
+
+	@app.route('/api/v2/event/<event_id>/rsvp', methods=['POST', 'GET'])
+	def rsvp(event_id):
+		"""RSVP to an event"""
+		# get the access token from the authorization header
+		auth_header = request.headers.get('Authorization')
+		access_token = auth_header
+
+		if access_token:
+			# Get the user id related to this access token
+			user_id = User.decode_token(access_token)
+
+			if not isinstance(user_id, str):
+				# If the id is not a string(error), we have a user id
+				# Get the event with the id specified from the URL (<int:id>)
+				event = Events.query.filter_by(id=event_id).first()
+				if event:
+					# Check to see if event exists					
+					if request.method == 'POST':
+						result = event.create_reservation(user_id)
+						print(result)
+						if result == "Reservation Created":
+							return jsonify({"message" : "RSVP Successful"}), 201
+						return jsonify({"message" : "Reservation already created!"}), 302
+
+					visitors = event.rsvp.all()
+
+					if visitors:
+						attending_visitors = []
+						for user in visitors:
+							new= {
+								"username" : user.username,
+								"email" : user.email
+							}
+							attending_visitors.append(new)
+						return make_response(jsonify(attending_visitors)), 200
+
+					response = {"message" : "No visitors"}
+					return make_response(jsonify(response)), 200
+
+				else:
+					response = {"message" : "Event does not exist!"}
+					return make_response(jsonify(response)), 404
+			else:
+				response = {"message" : "UNAUTHORIZED! Please login or sign up!"}
 				return make_response(jsonify(response)), 401
 
 	from .auth import auth_blueprint

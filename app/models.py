@@ -19,6 +19,7 @@ class User(db.Model):
     email = db.Column(db.String(128))
     password = db.Column(db.String(256))
     events = db.relationship('Events', order_by='Events.id', cascade="all, delete-orphan")
+    visitor = db.relationship('Events', secondary='rsvp', backref=db.backref('rsvp', lazy='dynamic'))
 
     def __init__(self, username, email, password):
         """
@@ -98,7 +99,18 @@ class Events(db.Model):
     description = db.Column(db.String(16384))
     created_by = db.Column(db.Integer, db.ForeignKey(User.id))
 
-    
+    def reserved(self, user_id):
+        """Check if a user has already RSVP to an event"""
+        return self.rsvp.filter_by(id=user_id).first() is not None
+
+    def create_reservation(self, user_id):
+        """ Add a new user to a list of visitors"""
+        if not self.reserved(user_id):
+            self.rsvp.append(user_id)
+            self.save()
+            return "Reservation Created"
+        return "Already RSVP for this event"
+
     def save(self):
         """
         Save events,this applies for both creating a 

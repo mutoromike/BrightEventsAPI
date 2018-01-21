@@ -159,6 +159,24 @@ class EventsTestCase(unittest.TestCase):
             headers=dict(Authorization= access_token))
         self.assertEqual(result.status_code, 404)
 
+    def test_successful_rsvp(self):
+        """Test API can create successful rsvp."""
+        access_token = self.get_token()
+        # Create event
+        req = self.client().post(
+            '/api/v2/event',
+            headers=dict(Authorization= access_token),
+            data=json.dumps(self.event), content_type='application/json')
+        self.assertEqual(req.status_code, 201)
+
+        results = json.loads(req.data.decode())
+        # RSVP to event
+        res = self.client().post('/api/v2/event/{}/rsvp'.format(results['id']),
+            headers=dict(Authorization= access_token),
+            content_type='application/json')
+        self.assertEqual(res.status_code, 201)
+        self.assertIn('RSVP Successful', str(res.data))
+
     def tearDown(self):
         """teardown all initialized variables."""
         with self.app.app_context():
