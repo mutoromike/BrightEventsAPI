@@ -8,7 +8,13 @@ import jwt
 from datetime import datetime, timedelta
 from flask import current_app
 
-class User(db.Model):
+rsvp = db.Table('rsvp',
+    db.Column('user_id', db.Integer, db.ForeignKey('users.id')),
+    db.Column('event_id', db.Integer, db.ForeignKey('events.id'))
+    )
+
+class User(db.Model): 
+
     """
     Class defining user table
     """
@@ -99,14 +105,14 @@ class Events(db.Model):
     description = db.Column(db.String(16384))
     created_by = db.Column(db.Integer, db.ForeignKey(User.id))
 
-    def reserved(self, user_id):
+    def reserved(self, current_user):
         """Check if a user has already RSVP to an event"""
-        return self.rsvp.filter_by(id=user_id).first() is not None
+        return self.rsvp.filter_by(id=current_user.id).first() is not None
 
-    def create_reservation(self, user_id):
+    def create_reservation(self, current_user):
         """ Add a new user to a list of visitors"""
-        if not self.reserved(user_id):
-            self.rsvp.append(user_id)
+        if not self.reserved(current_user):
+            self.rsvp.append(current_user)
             self.save()
             return "Reservation Created"
         return "Already RSVP for this event"
@@ -139,9 +145,6 @@ class Events(db.Model):
         """
         return "<Events: {}>".format(self.name)
 
-rsvp = db.Table('rsvp',
-	db.Column('user_id', db.Integer, db.ForeignKey('users.id')),
-	db.Column('event_id', db.Integer, db.ForeignKey('events.id'))
-	)
+
 
     
