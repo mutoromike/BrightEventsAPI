@@ -32,7 +32,7 @@ def create_app(config_name):
 
 				if request.method == "POST":
 					event = request.get_json()
-					print(event)
+					# print(event)
 					created_event = Events(
 											name=event['name'], 
 											category=event['category'], 
@@ -98,6 +98,7 @@ def create_app(config_name):
 				# If the id is not a string(error), we have a user id
 				# Get the event with the id specified from the URL (<int:id>)
 				event = Events.query.filter_by(id=id).first()
+				# print("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<",event)
 				if not event:
 					# There is no event with this ID for this User, so
 					# Raise an HTTPException with a 404 not found status code
@@ -159,7 +160,6 @@ def create_app(config_name):
 		# get the access token from the authorization header
 		auth_header = request.headers.get('Authorization')
 		access_token = auth_header
-
 		if access_token:
 			# Get the user id related to this access token
 			user_id = User.decode_token(access_token)
@@ -171,17 +171,19 @@ def create_app(config_name):
 				if event:
 					# Check to see if event exists					
 					if request.method == 'POST':
-						result = event.create_reservation(user_id)
+						current_user = User.query.filter_by(id=user_id).first()
+						print(current_user)
+						result = event.create_reservation(current_user)
 						print(result)
 						if result == "Reservation Created":
 							return jsonify({"message" : "RSVP Successful"}), 201
 						return jsonify({"message" : "Reservation already created!"}), 302
 
-					visitors = event.rsvp.all()
+					guests = event.rsvp.all()
 
-					if visitors:
+					if guests:
 						attending_visitors = []
-						for user in visitors:
+						for user in guests:
 							new= {
 								"username" : user.username,
 								"email" : user.email
