@@ -179,10 +179,10 @@ class EventsTestCase(unittest.TestCase):
 
     def tearDown(self):
         """teardown all initialized variables."""
-        with self.app.app_context():
-            # drop all tables
-            db.session.remove()
-            db.drop_all()
+        # with self.app.app_context():
+        # drop all tables
+        db.session.remove()
+        db.drop_all()
     
 
 if __name__ == "__main__":
