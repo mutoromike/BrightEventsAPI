@@ -10,7 +10,7 @@ application has originated from the fact that people need to have access to even
 
 ## Build Status
 
-[![Build Status](https://travis-ci.org/mutoromike/BrightEventsAPI.svg?branch=master)](https://travis-ci.org/mutoromike/BrightEventsAPI)  [![Coverage Status](https://coveralls.io/repos/github/mutoromike/BrightEventsAPI/badge.svg?branch=master)](https://coveralls.io/github/mutoromike/BrightEventsAPI?branch=master)  [![Maintainability](https://api.codeclimate.com/v1/badges/efd11f75c99118b4fa21/maintainability)](https://codeclimate.com/github/mutoromike/BrightEventsAPI/maintainability)
+[![Build Status](https://travis-ci.org/mutoromike/BrightEventsAPI.svg?branch=master)](https://travis-ci.org/mutoromike/BrightEventsAPI)  [![Coverage Status](https://coveralls.io/repos/github/mutoromike/BrightEventsAPI/badge.svg?branch=ft-implement-jwt-auth)](https://coveralls.io/github/mutoromike/BrightEventsAPI?branch=ft-implement-jwt-auth)  [![Maintainability](https://api.codeclimate.com/v1/badges/efd11f75c99118b4fa21/maintainability)](https://codeclimate.com/github/mutoromike/BrightEventsAPI/maintainability)
 
 
 ## Tech/Framework used
