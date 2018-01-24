@@ -18,7 +18,8 @@ def create_app(config_name):
 	db.init_app(app)
 
 	@app.route('/api/v2/event', methods=['POST', 'GET'])
-	def events():
+	@app.route('/api/v2/event/<int:page>', methods=['GET'])
+	def events(page=1):
 
 		# Get the access token from the header
 		auth_header = request.headers.get('Authorization')
@@ -58,7 +59,7 @@ def create_app(config_name):
 					""" 
 					GET
 					"""
-					events = Events.query.filter_by(created_by=user_id)
+					events = Events.query.filter_by(created_by=user_id).paginate(page, per_page = 3, error_out=True).items
 					# events = Events.get_all(user_id)
 					results = []
 
