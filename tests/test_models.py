@@ -21,33 +21,52 @@ class EventsTestCase(unittest.TestCase):
         self.client = self.app.test_client
         self.event = {'name': 'birthday', 'category': 'party', 'location': 'nairobi', 'date': '12/12/2018',\
         'description': 'Everyone is welcome'}
+        self.user_data = {
+            'username': "chrisevans",
+            'email': "test@example.com",
+            'password': "test_password",
+            'cpassword': "test_password"
+        }
+        self.login_data = {
+            'email': "test@example.com",
+            'password': "test_password"
+        }
+
+        self.user_data2 = {
+            'username': "brucebarner",
+            'email': "bruce@infinity.com",
+            'password': "strongestavenger",
+            'cpassword': "strongestavenger"
+        }
+        self.login_data2 = {
+            'email': "bruce@infinity.com",
+            'password': "strongestavenger"
+        }
 
         # binds the app to the current context
         with self.app.app_context():
             # create all tables
             db.create_all()
 
-    def register_user(self, username ="chrisevans", email = "test@example.com",
-                     password = "test_password", cpassword = "test_password"):
-        user_data = {
-            'username': username,
-            'email': email,
-            'password': password,
-            'cpassword': cpassword
-        }
-        return self.client().post('api/v2/auth/register', data=json.dumps(user_data), content_type='application/json' )
+    def register_user(self, data):
+        
+        return self.client().post('api/v2/auth/register', data=json.dumps(data), content_type='application/json' )
 
-    def login_user(self, email="test@example.com", password="test_password"):
-        user_data = {
-            'email': email,
-            'password': password
-        }
-        return self.client().post('/api/v2/auth/login', data=json.dumps(user_data), content_type='application/json' )
+    def login_user(self, data):
+        
+        return self.client().post('/api/v2/auth/login', data=json.dumps(data), content_type='application/json' )
 
     def get_token(self):
         """register and login a user to get an access token"""
-        self.register_user()
-        result = self.login_user()
+        self.register_user(self.user_data)
+        result = self.login_user(self.login_data)
+        access_token = json.loads(result.data.decode())['access_token']
+        return access_token
+
+    def get_new_token(self):
+        """register and login a user to get an access token"""
+        self.register_user(self.user_data2)
+        result = self.login_user(self.login_data2)
         access_token = json.loads(result.data.decode())['access_token']
         return access_token
 
@@ -72,7 +91,7 @@ class EventsTestCase(unittest.TestCase):
 
         res = self.client().post('/api/v2/events', headers=dict(Authorization=access_token), 
             data=json.dumps(myevent), content_type='application/json' )
-        # self.assertEqual(res.status_code, 400)
+        self.assertEqual(res.status_code, 400)
         result = json.loads(res.data.decode())
         print(result)
         self.assertIn('cannot be empty', result['message'])
@@ -185,6 +204,23 @@ class EventsTestCase(unittest.TestCase):
             headers=dict(Authorization= access_token))
         self.assertIn("Software", str(results.data))
 
+    def test_deleting_of_existing_event(self):
+        """Test User can only delete an existing event"""
+        access_token = self.get_token()
+
+        req = self.client().post(
+            '/api/v2/events',
+            headers=dict(Authorization= access_token),
+            data=json.dumps(self.event), content_type='application/json')
+        self.assertEqual(req.status_code, 201)
+        results = json.loads(req.data.decode())
+
+        # Delete created event
+        res = self.client().delete(
+            '/api/v2/events/2',
+            headers=dict(Authorization= access_token))
+        self.assertEqual(res.status_code, 404)
+
     def test_deleting_of_event(self):
         """Test API can delete an existing Event. (DELETE request)."""
         access_token = self.get_token()
@@ -208,6 +244,30 @@ class EventsTestCase(unittest.TestCase):
             headers=dict(Authorization= access_token))
         self.assertEqual(result.status_code, 404)
 
+    def test_deleting_of_own_event(self):
+        """Test User can only delete their own events. (DELETE request)."""
+        access_token = self.get_token()
+        access_token2 = self.get_new_token()
+
+        req = self.client().post(
+            '/api/v2/events',
+            headers=dict(Authorization= access_token),
+            data=json.dumps(self.event), content_type='application/json')
+        self.assertEqual(req.status_code, 201)
+        results = json.loads(req.data.decode())
+
+        # Delete created event
+        res = self.client().delete(
+            '/api/v2/events/{}'.format(results['id']),
+            headers=dict(Authorization= access_token2))
+        self.assertEqual(res.status_code, 401)
+
+        # Test to see if it exists, should return a 200 (Event still exists)
+        result = self.client().get(
+            '/api/v2/events/1',
+            headers=dict(Authorization= access_token2))
+        self.assertEqual(result.status_code, 200)
+
     def test_successful_rsvp(self):
         """Test API can create successful rsvp."""
         access_token = self.get_token()
@@ -225,6 +285,83 @@ class EventsTestCase(unittest.TestCase):
             content_type='application/json')
         self.assertEqual(res.status_code, 201)
         self.assertIn('RSVP Successful', str(res.data))
+
+    def test_double_rsvp(self):
+        """Test API can capture double rsvp."""
+        access_token = self.get_token()
+        # Create event
+        req = self.client().post(
+            '/api/v2/events',
+            headers=dict(Authorization= access_token),
+            data=json.dumps(self.event), content_type='application/json')
+        self.assertEqual(req.status_code, 201)
+
+        results = json.loads(req.data.decode())
+        # RSVP to event
+        res = self.client().post('/api/v2/event/{}/rsvp'.format(results['id']),
+            headers=dict(Authorization= access_token),
+            content_type='application/json')
+        self.assertEqual(res.status_code, 201)
+        self.assertIn('RSVP Successful', str(res.data))
+
+        # Repeat RSVP to event
+        res = self.client().post('/api/v2/event/{}/rsvp'.format(results['id']),
+            headers=dict(Authorization= access_token),
+            content_type='application/json')
+        self.assertEqual(res.status_code, 302)
+        self.assertIn('Reservation already created!', str(res.data))
+
+    def test_successful_view_rsvp(self):
+        """Test successful return of rsvp list"""
+        access_token = self.get_token()
+        # Create event
+        req = self.client().post(
+            '/api/v2/events',
+            headers=dict(Authorization= access_token),
+            data=json.dumps(self.event), content_type='application/json')
+        self.assertEqual(req.status_code, 201)
+
+        results = json.loads(req.data.decode())
+        # RSVP to event
+        res = self.client().post('/api/v2/event/{}/rsvp'.format(results['id']),
+            headers=dict(Authorization= access_token),
+            content_type='application/json')
+        self.assertEqual(res.status_code, 201)
+        self.assertIn('RSVP Successful', str(res.data))
+
+        # Get list of RSVP to event
+        res = self.client().get('/api/v2/event/{}/rsvp'.format(results['id']),
+            headers=dict(Authorization= access_token),
+            content_type='application/json')
+        self.assertEqual(res.status_code, 200)
+        self.assertIn('You can only see visitors ', str(res.data))
+
+
+    def test_view_rsvp(self):
+        """Test User can only view rsvp list of their own event"""
+        access_token = self.get_token()
+        access_token2 = self.get_new_token()
+        # Create event
+        req = self.client().post(
+            '/api/v2/events',
+            headers=dict(Authorization= access_token),
+            data=json.dumps(self.event), content_type='application/json')
+        self.assertEqual(req.status_code, 201)
+
+        results = json.loads(req.data.decode())
+        # RSVP to event
+        res = self.client().post('/api/v2/event/{}/rsvp'.format(results['id']),
+            headers=dict(Authorization= access_token2),
+            content_type='application/json')
+        self.assertEqual(res.status_code, 201)
+        self.assertIn('RSVP Successful', str(res.data))
+
+        # Get list of RSVP to event
+        res = self.client().get('/api/v2/event/{}/rsvp'.format(results['id']),
+            headers=dict(Authorization= access_token2),
+            content_type='application/json')
+        self.assertEqual(res.status_code, 401)
+        self.assertIn('You can only see visitors ', str(res.data))
 
     def test_creation_of_similar_event(self):
         """
