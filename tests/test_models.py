@@ -334,7 +334,6 @@ class EventsTestCase(unittest.TestCase):
             headers=dict(Authorization= access_token),
             content_type='application/json')
         self.assertEqual(res.status_code, 200)
-        self.assertIn('You can only see visitors ', str(res.data))
 
 
     def test_view_rsvp(self):
