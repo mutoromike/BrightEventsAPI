@@ -3,6 +3,7 @@
 from flask import Flask, request, jsonify, abort, make_response
 from flask_sqlalchemy import SQLAlchemy
 from config import app_config
+import re
 
 # initialize sql-alchemy
 db = SQLAlchemy()
@@ -17,8 +18,8 @@ def create_app(config_name):
 	app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 	db.init_app(app)
 
-	@app.route('/api/v2/event', methods=['POST', 'GET'])
-	@app.route('/api/v2/event/<int:page>', methods=['GET'])
+	@app.route('/api/v2/events', methods=['POST', 'GET'])
+	@app.route('/api/v2/events/page=<int:page>', methods=['GET'])
 	def events(page=1):
 
 		# Get the access token from the header
@@ -30,29 +31,52 @@ def create_app(config_name):
 			user_id = User.decode_token(access_token)
 			if not isinstance(user_id, str):
 				# Go ahead and handle the request, the user is authenticated
+				current_user = User.query.filter_by(id=user_id).first()
 
 				if request.method == "POST":
 					event = request.get_json()
-					# print(event)
-					created_event = Events(
-											name=event['name'], 
-											category=event['category'], 
-											location=event['location'], 
-											date=event['date'], 
-											description=event['description'],
-											created_by = user_id
-											)
-					created_event.save()
-					response = jsonify({
-						'id': created_event.id,
-						'name' : created_event.name,
-						'category' : created_event.category,
-						'location' : created_event.location,
-						'date' : created_event.date,
-						'description' : created_event.description,
-						'created_by' : created_event.created_by
+					name=event['name'], 
+					category=event['category'], 
+					location=event['location'], 
+					date=event['date'], 
+					description=event['description']
+					if name is None or category is None or location is None:
+						# Check whether fields are not empty												
+						response = {"message" : "Event details cannot be empty!"}
+						return make_response(jsonify(response)), 400
+					# if not re.match("^[a-zA-Z0-9_]*$", name):
+					# 	response = {"message" : "Event name cannot have special characters!"}
+					# 	return make_response(jsonify(response)), 400
+					existing=Events.query.filter_by(name=name).filter_by(category=category).filter_by\
+					(created_by=user_id).first()					
+					print(current_user.events)
+					if existing:
+						response = {"message" : "A similar event already exists!"}
+						return make_response(jsonify(response)), 302					
+					try:
+						created_event = Events(
+										name=name, 
+										category=category, 
+										location=location, 
+										date=date, 
+										description=description,
+										created_by = user_id
+										)
+						created_event.save()
+						response = jsonify({
+							'id': created_event.id,
+							'name' : created_event.name,
+							'category' : created_event.category,
+							'location' : created_event.location,
+							'date' : created_event.date,
+							'description' : created_event.description,
+							'created_by' : created_event.created_by
+						})
+							
 
-					})
+					except AttributeError:
+						response = {"message": "There was an error creating the event, please try again"}
+						return make_response(jsonify(response)), 500
 					return make_response(response), 201
 
 				else:
@@ -60,6 +84,8 @@ def create_app(config_name):
 					GET
 					"""
 					events = Events.query.filter_by(created_by=user_id).paginate(page, per_page = 3, error_out=True).items
+					# Query all
+					# events = Events.query.paginate(page, per_page = 3, error_out=True).items
 					# events = Events.get_all(user_id)
 					results = []
 
@@ -85,7 +111,7 @@ def create_app(config_name):
 				}
 				return make_response(jsonify(response)), 401
 
-	@app.route('/api/v2/event/<int:id>', methods=['GET', 'PUT', 'DELETE'])
+	@app.route('/api/v2/events/<int:id>', methods=['GET', 'PUT', 'DELETE'])
 	def event_tasks(id, **kwargs):
 		# get the access token from the authorization header
 		auth_header = request.headers.get('Authorization')
@@ -99,7 +125,7 @@ def create_app(config_name):
 				# If the id is not a string(error), we have a user id
 				# Get the event with the id specified from the URL (<int:id>)
 				event = Events.query.filter_by(id=id).first()
-				# print("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<",event)
+				# print(event)
 				if not event:
 					# There is no event with this ID for this User, so
 					# Raise an HTTPException with a 404 not found status code
