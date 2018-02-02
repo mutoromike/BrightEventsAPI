@@ -28,26 +28,26 @@ class EventsTestCase(unittest.TestCase):
             db.create_all()
 
     def register_user(self, username ="chrisevans", email = "test@example.com",
-                     password = "test_password"):
+                     password = "test_password", cpassword = "test_password"):
         user_data = {
             'username': username,
             'email': email,
-            'password': password
+            'password': password,
+            'cpassword': cpassword
         }
-        return self.client().post('/auth/register', data=json.dumps(user_data), content_type='application/json' )
+        return self.client().post('api/v2/auth/register', data=json.dumps(user_data), content_type='application/json' )
 
     def login_user(self, email="test@example.com", password="test_password"):
         user_data = {
             'email': email,
             'password': password
         }
-        return self.client().post('/auth/login', data=json.dumps(user_data), content_type='application/json' )
+        return self.client().post('/api/v2/auth/login', data=json.dumps(user_data), content_type='application/json' )
 
     def get_token(self):
         """register and login a user to get an access token"""
         self.register_user()
         result = self.login_user()
-        # self.assertIn('You logged in successfully.', str(result))
         access_token = json.loads(result.data.decode())['access_token']
         return access_token
 
@@ -57,27 +57,42 @@ class EventsTestCase(unittest.TestCase):
         """
         access_token = self.get_token()  
 
-        result = self.client().post('/api/v2/event', headers=dict(Authorization=access_token), 
+        result = self.client().post('/api/v2/events', headers=dict(Authorization=access_token), 
             data=json.dumps(self.event), content_type='application/json' )
         self.assertEqual(result.status_code, 201)
         self.assertEqual(self.event['name'], 'birthday')
 
-    def test_getting_all_events(self):
+    # def test_empty_event_fields(self):
+    #     """
+    #     Test empty event fields.    
+    #     """
+    #     access_token = self.get_token()
+    #     myevent = {'name': "", 'category': "", 'location': "", 'date': "",\
+    #     'description': 'Everyone is welcome'}  
+
+    #     res = self.client().post('/api/v2/event', headers=dict(Authorization=access_token), 
+    #         data=json.dumps(myevent), content_type='application/json' )
+    #     # self.assertEqual(res.status_code, 400)
+    #     result = json.loads(res.data.decode())
+    #     print(result)
+    #     self.assertIn('cannot be empty', result['message'])
+
+    def test_getting_user_events(self):
         """
-        Test API can get an Event (GET request).
+        Test API can get Events belonging to a user (GET request).
         """
         access_token = self.get_token()
 
         # create an event by making a POST request
         res = self.client().post(
-            '/api/v2/event',
+            '/api/v2/events',
             headers=dict(Authorization= access_token), 
             data=json.dumps(self.event), content_type='application/json')
         self.assertEqual(res.status_code, 201)
 
         # get all the event that belong to the test user by making a GET request
         res = self.client().get(
-            '/api/v2/event',
+            '/api/v2/events',
             headers=dict(Authorization= access_token),
         )
         self.assertEqual(res.status_code, 200)
@@ -88,7 +103,7 @@ class EventsTestCase(unittest.TestCase):
         access_token = self.get_token()
 
         req = self.client().post(
-            '/api/v2/event',
+            '/api/v2/events',
             headers=dict(Authorization= access_token),
             data=json.dumps(self.event), content_type='application/json')
 
@@ -98,7 +113,7 @@ class EventsTestCase(unittest.TestCase):
         results = json.loads(req.data.decode())
 
         result = self.client().get(
-            '/api/v2/event/{}'.format(results['id']),
+            '/api/v2/events/{}'.format(results['id']),
             headers=dict(Authorization= access_token))
         # assert that the event is actually returned given its ID
         self.assertEqual(result.status_code, 200)
@@ -109,7 +124,7 @@ class EventsTestCase(unittest.TestCase):
         access_token = self.get_token()
         # Create an event
         req = self.client().post(
-            '/api/v2/event',
+            '/api/v2/events',
             headers=dict(Authorization= access_token),
             data=json.dumps(self.event), content_type='application/json')
         self.assertEqual(req.status_code, 201)
@@ -125,14 +140,14 @@ class EventsTestCase(unittest.TestCase):
                 'description' : 'Prizes will be won'
             }
         req = self.client().put(
-            '/api/v2/event/{}'.format(results['id']),
+            '/api/v2/events/{}'.format(results['id']),
             headers=dict(Authorization= access_token),
             data=json.dumps(edit), content_type='application/json')
         self.assertEqual(req.status_code, 200)
 
         # Get the edited event
         results = self.client().get(
-            '/api/v2/event/{}'.format(results['id']),
+            '/api/v2/events/{}'.format(results['id']),
             headers=dict(Authorization= access_token))
         self.assertIn("Software", str(results.data))
 
@@ -141,7 +156,7 @@ class EventsTestCase(unittest.TestCase):
         access_token = self.get_token()
 
         req = self.client().post(
-            '/api/v2/event',
+            '/api/v2/events',
             headers=dict(Authorization= access_token),
             data=json.dumps(self.event), content_type='application/json')
         self.assertEqual(req.status_code, 201)
@@ -149,13 +164,13 @@ class EventsTestCase(unittest.TestCase):
 
         # Delete created event
         res = self.client().delete(
-            '/api/v2/event/{}'.format(results['id']),
+            '/api/v2/events/{}'.format(results['id']),
             headers=dict(Authorization= access_token))
         self.assertEqual(res.status_code, 200)
 
         # Test to see if it exists, should return a 404
         result = self.client().get(
-            '/api/v2/event/1',
+            '/api/v2/events/1',
             headers=dict(Authorization= access_token))
         self.assertEqual(result.status_code, 404)
 
@@ -164,7 +179,7 @@ class EventsTestCase(unittest.TestCase):
         access_token = self.get_token()
         # Create event
         req = self.client().post(
-            '/api/v2/event',
+            '/api/v2/events',
             headers=dict(Authorization= access_token),
             data=json.dumps(self.event), content_type='application/json')
         self.assertEqual(req.status_code, 201)
@@ -176,6 +191,27 @@ class EventsTestCase(unittest.TestCase):
             content_type='application/json')
         self.assertEqual(res.status_code, 201)
         self.assertIn('RSVP Successful', str(res.data))
+
+    def test_creation_of_similar_event(self):
+        """
+        Test API can skip creation of similar event.
+        """
+        access_token = self.get_token()
+
+        # create an event by making a POST request
+        res = self.client().post(
+            '/api/v2/events',
+            headers=dict(Authorization= access_token), 
+            data=json.dumps(self.event), content_type='application/json')
+
+        # Create a similar event and check the error
+        myevent = {'name': 'birthday', 'category': 'party', 'location': 'nairobi', 'date': '12/12/2018',\
+        'description': 'Everyone is welcome'}
+        result = self.client().post(
+            '/api/v2/events',
+            headers=dict(Authorization= access_token), 
+            data=json.dumps(myevent), content_type='application/json')
+        self.assertEqual(result.status_code, 302)
 
     def tearDown(self):
         """teardown all initialized variables."""
