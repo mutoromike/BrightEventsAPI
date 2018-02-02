@@ -62,20 +62,35 @@ class EventsTestCase(unittest.TestCase):
         self.assertEqual(result.status_code, 201)
         self.assertEqual(self.event['name'], 'birthday')
 
-    # def test_empty_event_fields(self):
-    #     """
-    #     Test empty event fields.    
-    #     """
-    #     access_token = self.get_token()
-    #     myevent = {'name': "", 'category': "", 'location': "", 'date': "",\
-    #     'description': 'Everyone is welcome'}  
+    def test_empty_event_fields(self):
+        """
+        Test empty event fields.    
+        """
+        access_token = self.get_token()
+        myevent = {'name': "", 'category': "", 'location': "", 'date': "",\
+        'description': 'Everyone is welcome'}  
 
-    #     res = self.client().post('/api/v2/event', headers=dict(Authorization=access_token), 
-    #         data=json.dumps(myevent), content_type='application/json' )
-    #     # self.assertEqual(res.status_code, 400)
-    #     result = json.loads(res.data.decode())
-    #     print(result)
-    #     self.assertIn('cannot be empty', result['message'])
+        res = self.client().post('/api/v2/events', headers=dict(Authorization=access_token), 
+            data=json.dumps(myevent), content_type='application/json' )
+        # self.assertEqual(res.status_code, 400)
+        result = json.loads(res.data.decode())
+        print(result)
+        self.assertIn('cannot be empty', result['message'])
+
+    def test_special_characters_in_event_name(self):
+        """
+        Test special characters.    
+        """
+        access_token = self.get_token()
+        myevent = {'name': "@# ha&(", 'category': "Development", 'location': "Nairobi", 'date': "12/12/2018",\
+        'description': 'Everyone is welcome'}  
+
+        res = self.client().post('/api/v2/events', headers=dict(Authorization=access_token), 
+            data=json.dumps(myevent), content_type='application/json' )
+        self.assertEqual(res.status_code, 400)
+        result = json.loads(res.data.decode())
+        print(result)
+        self.assertIn('Event name cannot have special', result['message'])
 
     def test_getting_user_events(self):
         """
@@ -95,6 +110,25 @@ class EventsTestCase(unittest.TestCase):
             '/api/v2/events',
             headers=dict(Authorization= access_token),
         )
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(self.event['name'], 'birthday')
+    
+    def test_getting_all_events(self):
+        """
+        Test API can get all Events in the system (GET request).
+        """
+        access_token = self.get_token()
+
+        # create an event by making a POST request
+        res = self.client().post(
+            '/api/v2/events',
+            headers=dict(Authorization= access_token), 
+            data=json.dumps(self.event), content_type='application/json')
+        self.assertEqual(res.status_code, 201)
+
+        # get all the event that belong to the test user by making a GET request
+        res = self.client().get(
+            '/api/v2/events/all')
         self.assertEqual(res.status_code, 200)
         self.assertEqual(self.event['name'], 'birthday')
 
