@@ -40,14 +40,17 @@ def create_app(config_name):
 					location=event['location'], 
 					date=event['date'], 
 					description=event['description']
+
 					if not event['name'] or not event['category'] or \
 					not event['location'] or not event['date']:
 						# Check whether fields are not empty												
 						response = {"message" : "Event details cannot be empty!"}
 						return make_response(jsonify(response)), 400
+
 					if not re.match("^[a-zA-Z0-9_ ]*$", event['name'].strip()):
 						response = {"message" : "Event name cannot have special characters!"}
 						return make_response(jsonify(response)), 400
+
 					existing=Events.query.filter_by(name=name).filter_by(category=category).filter_by\
 					(created_by=user_id).first()
 					if existing:
@@ -125,23 +128,34 @@ def create_app(config_name):
 				# If the id is not a string(error), we have a user id
 				# Get the event with the id specified from the URL (<int:id>)
 				event = Events.query.filter_by(id=id).first()
+				
 				# print(event)
 				if not event:
 					# There is no event with this ID for this User, so
-					# Raise an HTTPException with a 404 not found status code
-					abort(404)
+					response = {
+						"message": "Event does not exist!"
+					}
+					return jsonify(response), 404
 
 				if request.method == "DELETE":
 					# delete the event using our delete method
-					event.delete()
-					response = {
-						"message": "event {} deleted".format(event.id)
-					}
+					# Check if event belongs to user
+					created_by = event.created_by
+					print(created_by)
+					if user_id == created_by:
+						event.delete()
+						response = {
+							"message": "event {} deleted".format(event.id)
+						}
 
-					return jsonify(response), 200
+						return jsonify(response), 200
+					response = {
+						"message": "You can only delete your own event"
+					}
+					return jsonify(response), 401
 
 				elif request.method == 'PUT':
-					# Obtain the new name of the bucketlist from the request data
+					# Obtain the new name of the event from the request data
 					edited = request.get_json()
 
 					event.name=edited['name']
@@ -207,19 +221,26 @@ def create_app(config_name):
 						return jsonify({"message" : "Reservation already created!"}), 302
 
 					guests = event.rsvp.all()
+					created_by = event.created_by
+					print(created_by)
+					if user_id == created_by:
+						if guests:
+							attending_visitors = []
+							for user in guests:
+								new= {
+									"username" : user.username,
+									"email" : user.email
+								}
+								attending_visitors.append(new)
+							return make_response(jsonify(attending_visitors)), 200
 
-					if guests:
-						attending_visitors = []
-						for user in guests:
-							new= {
-								"username" : user.username,
-								"email" : user.email
-							}
-							attending_visitors.append(new)
-						return make_response(jsonify(attending_visitors)), 200
-
-					response = {"message" : "No visitors"}
-					return make_response(jsonify(response)), 200
+						response = {"message" : "No visitors"}
+						return make_response(jsonify(response)), 200
+					response = {
+						"message": "You can only see visitors of your own event!"
+					}
+					return jsonify(response), 401
+						
 
 				else:
 					response = {"message" : "Event does not exist!"}
