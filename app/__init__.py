@@ -35,21 +35,21 @@ def create_app(config_name):
 
 				if request.method == "POST":
 					event = request.get_json()
-					name=event['name'], 
+					name=event['name'].strip(), 
 					category=event['category'], 
 					location=event['location'], 
 					date=event['date'], 
 					description=event['description']
-					if name is None or category is None or location is None:
+					if not event['name'] or not event['category'] or \
+					not event['location'] or not event['date']:
 						# Check whether fields are not empty												
 						response = {"message" : "Event details cannot be empty!"}
 						return make_response(jsonify(response)), 400
-					# if not re.match("^[a-zA-Z0-9_]*$", name):
-					# 	response = {"message" : "Event name cannot have special characters!"}
-					# 	return make_response(jsonify(response)), 400
+					if not re.match("^[a-zA-Z0-9_ ]*$", event['name'].strip()):
+						response = {"message" : "Event name cannot have special characters!"}
+						return make_response(jsonify(response)), 400
 					existing=Events.query.filter_by(name=name).filter_by(category=category).filter_by\
-					(created_by=user_id).first()					
-					print(current_user.events)
+					(created_by=user_id).first()
 					if existing:
 						response = {"message" : "A similar event already exists!"}
 						return make_response(jsonify(response)), 302					
@@ -227,6 +227,27 @@ def create_app(config_name):
 			else:
 				response = {"message" : "UNAUTHORIZED! Please login or sign up!"}
 				return make_response(jsonify(response)), 401
+
+	@app.route('/api/v2/events/all', methods=['GET'])
+	@app.route('/api/v2/events/all/page=<int:page>', methods=['GET'])
+	def all_events(page=1):
+		"""Get all events in the system, no login required"""
+		events = Events.query.paginate(page, per_page = 6, error_out=True).items
+		results = []
+
+		for event in events:
+			obj = {
+				'id': event.id,
+				'name' : event.name,
+				'category' : event.category,
+				'location' : event.location,
+				'date' : event.date,
+				'description' : event.description
+
+			}
+			results.append(obj)
+
+		return make_response(jsonify(results)), 200
 
 	from .auth import auth_blueprint
 	app.register_blueprint(auth_blueprint)
