@@ -270,6 +270,46 @@ def create_app(config_name):
 
 		return make_response(jsonify(results)), 200
 
+	@app.route('/api/v2/search', methods=['POST'])
+	@app.route('/api/v2/search/page=<int:page>', methods=['POST'])
+	def search(page=1):
+		"""Search for events in the system"""
+		# events = Events.query.paginate(page, per_page = 6, error_out=True).items
+		result = request.get_json()
+		try:
+			category = result['category']
+			print('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>', category)
+			filtered_events = Events.query.filter(Events.category.ilike("%" + category + "%"))\
+			.paginate(page, per_page = 6, error_out=True).items
+			event_list = []
+			print('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>', filtered_events)
+			if filtered_events:
+				for event in filtered_events:
+					found_event = {'name': event.name, 'category': event.category, 'location': event.location,\
+					'date': event.date, 'description': event.description}
+					event_list.append(found_event)
+				return jsonify({'Events belonging to this category': event_list}), 200
+
+			return jsonify({'message': 'There are no events related to this category'}), 404
+		except KeyError:
+			try:
+				location = result['location']
+				print('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>', location)
+				filtered_events = Events.query.filter(Events.location.ilike("%" + location + "%"))\
+				.paginate(page, per_page = 6, error_out=True).items
+				event_list = []
+				print('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>', filtered_events)
+				if filtered_events:
+					for event in filtered_events:
+						found_event = {'name': event.name, 'category': event.category, 'location': event.location,\
+						'date': event.date, 'description': event.description}
+						event_list.append(found_event)
+					return jsonify({'Existing Events in this location': event_list}), 200
+
+				return jsonify({'message': 'There are no existing events in this location'}), 404
+			except KeyError:
+				return jsonify({'Warning': 'Cannot comprehend the given search parameter'})
+				
 	from .auth import auth_blueprint
 	app.register_blueprint(auth_blueprint)
 
