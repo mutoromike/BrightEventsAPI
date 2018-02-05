@@ -383,6 +383,78 @@ class EventsTestCase(unittest.TestCase):
             data=json.dumps(myevent), content_type='application/json')
         self.assertEqual(result.status_code, 302)
 
+    def test_search_by_location(self):
+        """
+        Test API can search events by location (GET request).
+        """
+        access_token = self.get_token()
+
+        # create an event by making a POST request
+        res = self.client().post(
+            '/api/v2/events',
+            headers=dict(Authorization= access_token), 
+            data=json.dumps(self.event), content_type='application/json')
+        self.assertEqual(res.status_code, 201)
+
+        # get all the event that belong to the test user by making a GET request
+        res = self.client().post('/api/v2/search',
+            data=json.dumps({'location': 'nairobi'}), content_type='application/json')
+        self.assertEqual(res.status_code, 200)
+
+    def test_search_by_category(self):
+        """
+        Test API can search events by category (GET request).
+        """
+        access_token = self.get_token()
+
+        # create an event by making a POST request
+        res = self.client().post(
+            '/api/v2/events',
+            headers=dict(Authorization= access_token), 
+            data=json.dumps(self.event), content_type='application/json')
+        self.assertEqual(res.status_code, 201)
+
+        # get all the event that belong to the test user by making a GET request
+        res = self.client().post('/api/v2/search',
+            data=json.dumps({'category': 'party'}), content_type='application/json')
+        self.assertEqual(res.status_code, 200)
+    
+    def test_search_case_sensitivity(self):
+        """
+        Test that searching is case insensitive.
+        """
+        access_token = self.get_token()
+
+        # create an event by making a POST request
+        res = self.client().post(
+            '/api/v2/events',
+            headers=dict(Authorization= access_token), 
+            data=json.dumps(self.event), content_type='application/json')
+        self.assertEqual(res.status_code, 201)
+
+        # get all the event that belong to the test user by making a GET request
+        res = self.client().post('/api/v2/search',
+            data=json.dumps({'category': 'PARty'}), content_type='application/json')
+        self.assertEqual(res.status_code, 200)
+
+    def test_searching_non_existing_event(self):
+        """
+        Test searching of an event that does not exist.
+        """
+        access_token = self.get_token()
+
+        # create an event by making a POST request
+        res = self.client().post(
+            '/api/v2/events',
+            headers=dict(Authorization= access_token), 
+            data=json.dumps(self.event), content_type='application/json')
+        self.assertEqual(res.status_code, 201)
+
+        # get all the event that belong to the test user by making a GET request
+        res = self.client().post('/api/v2/search',
+            data=json.dumps({'category': 'learn'}), content_type='application/json')
+        self.assertEqual(res.status_code, 404)
+
     def tearDown(self):
         """teardown all initialized variables."""
         # with self.app.app_context():
