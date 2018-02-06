@@ -19,8 +19,6 @@ class RegistrationView(MethodView):
         req = request.get_json()
         user = User.query.filter_by(email=req['email']).first()
         user_name = User.query.filter_by(username=req['username']).first()
-
-        post_data = request.data
         
         username = req['username']                
         email = req['email']

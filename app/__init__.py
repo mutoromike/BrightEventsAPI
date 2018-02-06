@@ -10,9 +10,7 @@ db = SQLAlchemy()
 
 def create_app(config_name):
 	from app.models import Events, User
-	"""
-	Initialize app
-	"""
+	"""Initialize app"""
 	app = Flask(__name__, instance_relative_config=True)
 	app.config.from_object(app_config[config_name])
 	app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -35,10 +33,10 @@ def create_app(config_name):
 
 				if request.method == "POST":
 					event = request.get_json()
-					name=event['name'].strip(), 
-					category=event['category'], 
-					location=event['location'], 
-					date=event['date'], 
+					name=event['name'].strip() 
+					category=event['category'] 
+					location=event['location'] 
+					date=event['date']
 					description=event['description']
 
 					if not event['name'] or not event['category'] or \
@@ -114,8 +112,8 @@ def create_app(config_name):
 				}
 				return make_response(jsonify(response)), 401
 
-	@app.route('/api/v2/events/<int:id>', methods=['GET', 'PUT', 'DELETE'])
-	def event_tasks(id, **kwargs):
+	@app.route('/api/v2/events/<int:event_id>', methods=['GET', 'PUT', 'DELETE'])
+	def event_tasks(event_id, **kwargs):
 		# get the access token from the authorization header
 		auth_header = request.headers.get('Authorization')
 		access_token = auth_header
@@ -127,7 +125,7 @@ def create_app(config_name):
 			if not isinstance(user_id, str):
 				# If the id is not a string(error), we have a user id
 				# Get the event with the id specified from the URL (<int:id>)
-				event = Events.query.filter_by(id=id).first()
+				event = Events.query.filter_by(id=event_id).first()
 				
 				# print(event)
 				if not event:

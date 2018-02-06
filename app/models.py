@@ -118,10 +118,7 @@ class Events(db.Model):
         return "Already RSVP for this event"
 
     def save(self):
-        """
-        Save events,this applies for both creating a 
-        new event and updating an existing one
-        """
+        """Create and edit event"""
         db.session.add(self)
         db.session.commit()
 
