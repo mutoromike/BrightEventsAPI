@@ -191,7 +191,24 @@ class PassReset(MethodView):
                 'message': message
             }
             # return an error response, telling the user he is Unauthorized
-            return make_response(jsonify(response)), 401       
+            return make_response(jsonify(response)), 401    
+
+# class LogoutView(MethodView):
+#     """This class-based view handles user logout and access token generation."""
+
+#     def log(self):
+#         """Handle POST request for this view. Url ---> /auth/logout"""
+                    
+#         # Invalidate the access token. This will be used as the authorization header
+#         logged_out = @
+#         access_token = user.generate_token(logged_out)
+#         if access_token:
+#             response = {
+#                 'message': 'You logged out successfully.',
+#                 'access_token': access_token.decode()
+#             }
+#             return make_response(jsonify(response)), 200
+              
 
 
 registration_view = RegistrationView.as_view('register_view')

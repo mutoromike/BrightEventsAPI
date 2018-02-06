@@ -13,7 +13,8 @@ class DevelopmentConfig(Config):
     """ Configurations for Development."""
     DEBUG = True
     SECRET_KEY = os.getenv('SECRET_KEY')
-    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL')
+    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL') 
+    # SQLALCHEMY_DATABASE_URI = postgres_local_base + database_name
 
 class TestingConfig(Config):
     """ Configurations for Testing, with a separate test database."""
