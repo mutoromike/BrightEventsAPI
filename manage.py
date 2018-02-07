@@ -13,7 +13,7 @@ manager = Manager(app)
 
 manager.add_command('db', MigrateCommand)
 
-"""define command for testing called "test""""
+"""define command for testing called test""
 @manager.command
 def test():
     """Runs the unit tests without test coverage."""
