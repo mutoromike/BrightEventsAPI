@@ -10,7 +10,7 @@ db = SQLAlchemy()
 
 def create_app(config_name):
 	from app.models import Events, User
-	"""Initialize app"""
+	# Initialize app
 	app = Flask(__name__, instance_relative_config=True)
 	app.config.from_object(app_config[config_name])
 	app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -29,7 +29,6 @@ def create_app(config_name):
 			user_id = User.decode_token(access_token)
 			if not isinstance(user_id, str):
 				# Go ahead and handle the request, the user is authenticated
-				current_user = User.query.filter_by(id=user_id).first()
 
 				if request.method == "POST":
 					event = request.get_json()
@@ -81,9 +80,7 @@ def create_app(config_name):
 					return make_response(response), 201
 
 				else:
-					""" 
-					GET
-					"""
+					# GET
 					events = Events.query.filter_by(created_by=user_id).paginate(page, per_page = 3, error_out=True).items
 					# Query all
 					# events = Events.query.paginate(page, per_page = 3, error_out=True).items

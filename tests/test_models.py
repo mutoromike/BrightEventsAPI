@@ -4,7 +4,6 @@ File to handle testing of the created models
 
 import unittest
 from flask import jsonify
-import os
 import json
 from app import create_app, db
 
@@ -213,7 +212,6 @@ class EventsTestCase(unittest.TestCase):
             headers=dict(Authorization= access_token),
             data=json.dumps(self.event), content_type='application/json')
         self.assertEqual(req.status_code, 201)
-        results = json.loads(req.data.decode())
 
         # Delete created event
         res = self.client().delete(
@@ -369,8 +367,7 @@ class EventsTestCase(unittest.TestCase):
         access_token = self.get_token()
 
         # create an event by making a POST request
-        res = self.client().post(
-            '/api/v2/events',
+        res = self.client().post('/api/v2/events',
             headers=dict(Authorization= access_token), 
             data=json.dumps(self.event), content_type='application/json')
 
