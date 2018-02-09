@@ -16,6 +16,12 @@ def create_app(config_name):
 	app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 	db.init_app(app)
 
+	@app.route('/')
+	def index():
+		""" Render index page """
+
+		return jsonify({"message": "Welcome to Bright Events"})
+	
 	@app.route('/api/v2/events', methods=['POST', 'GET'])
 	@app.route('/api/v2/events/page=<int:page>', methods=['GET'])
 	def events(page=1):
@@ -110,7 +116,7 @@ def create_app(config_name):
 				return make_response(jsonify(response)), 401
 
 	@app.route('/api/v2/events/<int:event_id>', methods=['GET', 'PUT', 'DELETE'])
-	def event_tasks(event_id, **kwargs):
+	def event_tasks(event_id):
 		# get the access token from the authorization header
 		auth_header = request.headers.get('Authorization')
 		access_token = auth_header
@@ -273,11 +279,9 @@ def create_app(config_name):
 		result = request.get_json()
 		try:
 			category = result['category']
-			print('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>', category)
 			filtered_events = Events.query.filter(Events.category.ilike("%" + category + "%"))\
 			.paginate(page, per_page = 6, error_out=True).items
 			event_list = []
-			print('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>', filtered_events)
 			if filtered_events:
 				for event in filtered_events:
 					found_event = {'name': event.name, 'category': event.category, 'location': event.location,\
@@ -289,11 +293,9 @@ def create_app(config_name):
 		except KeyError:
 			try:
 				location = result['location']
-				print('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>', location)
 				filtered_events = Events.query.filter(Events.location.ilike("%" + location + "%"))\
 				.paginate(page, per_page = 6, error_out=True).items
 				event_list = []
-				print('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>', filtered_events)
 				if filtered_events:
 					for event in filtered_events:
 						found_event = {'name': event.name, 'category': event.category, 'location': event.location,\
