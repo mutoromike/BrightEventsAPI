@@ -1,5 +1,6 @@
 """ app/__init__.py """
 
+from functools import wraps
 from flask import Flask, request, jsonify, abort, make_response
 from flask_sqlalchemy import SQLAlchemy
 from config import app_config
@@ -9,12 +10,33 @@ import re
 db = SQLAlchemy()
 
 def create_app(config_name):
-	from app.models import Events, User
+	from app.models import Events, User, BlacklistToken
 	# Initialize app
 	app = Flask(__name__, instance_relative_config=True)
 	app.config.from_object(app_config[config_name])
 	app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 	db.init_app(app)
+
+	def authorize(f):
+    # Function to authenticate users while accessing other pages
+		@wraps(f)
+		def check(*args, **kwargs):
+			"""Function to check login status"""
+			access_token = request.headers.get('Authorization')
+			blacklisted = BlacklistToken.query.filter_by(token=access_token).first()
+			if not blacklisted:
+				return f(*args, **kwargs)
+			response = {"message": "Logged out. Please login again!" }
+			return make_response(jsonify(response)), 200
+		return check
+
+	def checkToken():
+		"""Check whether token is blacklisted"""
+		access_token = request.headers.get('Authorization')
+		blacklisted = BlacklistToken.query.filter_by(token=access_token).first()
+		if blacklisted:
+			return True
+		return False
 
 	@app.route('/')
 	def index():
@@ -24,6 +46,7 @@ def create_app(config_name):
 	
 	@app.route('/api/v2/events', methods=['POST', 'GET'])
 	@app.route('/api/v2/events/page=<int:page>', methods=['GET'])
+	@authorize	
 	def events(page=1):
 
 		# Get the access token from the header
@@ -116,6 +139,7 @@ def create_app(config_name):
 				return make_response(jsonify(response)), 401
 
 	@app.route('/api/v2/events/<int:event_id>', methods=['GET', 'PUT', 'DELETE'])
+	@authorize
 	def event_tasks(event_id):
 		# get the access token from the authorization header
 		auth_header = request.headers.get('Authorization')
@@ -205,50 +229,57 @@ def create_app(config_name):
 		if access_token:
 			# Get the user id related to this access token
 			user_id = User.decode_token(access_token)
+			token_status = checkToken()
+			if not token_status:
+				# User is still logged in; Continue
+				if not isinstance(user_id, str):
+					# If the id is not a string(error), we have a user id
+					# Get the event with the id specified from the URL (<int:id>)
+					event = Events.query.filter_by(id=event_id).first()
+					if event:
+						# Check to see if event exists					
+						if request.method == 'POST':
+							current_user = User.query.filter_by(id=user_id).first()
+							print(current_user)
+							result = event.create_reservation(current_user)
+							print(result)
+							if result == "Reservation Created":
+								return jsonify({"message" : "RSVP Successful"}), 201
+							return jsonify({"message" : "Reservation already created!"}), 302
 
-			if not isinstance(user_id, str):
-				# If the id is not a string(error), we have a user id
-				# Get the event with the id specified from the URL (<int:id>)
-				event = Events.query.filter_by(id=event_id).first()
-				if event:
-					# Check to see if event exists					
-					if request.method == 'POST':
-						current_user = User.query.filter_by(id=user_id).first()
-						print(current_user)
-						result = event.create_reservation(current_user)
-						print(result)
-						if result == "Reservation Created":
-							return jsonify({"message" : "RSVP Successful"}), 201
-						return jsonify({"message" : "Reservation already created!"}), 302
+						guests = event.rsvp.all()
+						created_by = event.created_by
+						print(created_by)
+						if user_id == created_by:
+							if guests:
+								attending_visitors = []
+								for user in guests:
+									new= {
+										"username" : user.username,
+										"email" : user.email
+									}
+									attending_visitors.append(new)
+								return make_response(jsonify(attending_visitors)), 200
 
-					guests = event.rsvp.all()
-					created_by = event.created_by
-					print(created_by)
-					if user_id == created_by:
-						if guests:
-							attending_visitors = []
-							for user in guests:
-								new= {
-									"username" : user.username,
-									"email" : user.email
-								}
-								attending_visitors.append(new)
-							return make_response(jsonify(attending_visitors)), 200
-
-						response = {"message" : "No visitors"}
-						return make_response(jsonify(response)), 200
-					response = {
-						"message": "You can only see visitors of your own event!"
-					}
-					return jsonify(response), 401
-						
-
+							response = {"message" : "No visitors"}
+							return make_response(jsonify(response)), 200
+						else:
+							response = {
+								"message": "You can only see visitors of your own event!"
+							}
+							return jsonify(response), 401
+					else:
+						response = {"message" : "Event does not exist!"}
+						return make_response(jsonify(response)), 404
 				else:
-					response = {"message" : "Event does not exist!"}
-					return make_response(jsonify(response)), 404
+					response = {"message" : "UNAUTHORIZED! Please login or sign up!"}
+					return make_response(jsonify(response)), 401	
 			else:
-				response = {"message" : "UNAUTHORIZED! Please login or sign up!"}
-				return make_response(jsonify(response)), 401
+				response = {"message" : "Logged out. Please login again!"}
+				return make_response(jsonify(response)), 401		
+		else:
+			response = {"message" : "UNAUTHORIZED! Please login or sign up!"}
+			return make_response(jsonify(response)), 401
 
 	@app.route('/api/v2/events/all', methods=['GET'])
 	@app.route('/api/v2/events/all/page=<int:page>', methods=['GET'])
