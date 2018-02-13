@@ -283,6 +283,26 @@ class EventsTestCase(unittest.TestCase):
             content_type='application/json')
         self.assertEqual(res.status_code, 201)
         self.assertIn('RSVP Successful', str(res.data))
+    
+    def test_logged_out_rsvp(self):
+        """Test API can prevent a logged out user from rsvp"""
+        access_token = self.get_token()
+        # Create event
+        req = self.client().post(
+            '/api/v2/events',
+            headers=dict(Authorization= access_token),
+            data=json.dumps(self.event), content_type='application/json')
+        self.assertEqual(req.status_code, 201)
+
+        results = json.loads(req.data.decode())
+        # RSVP to event
+        res = self.client().post('/api/v2/auth/logout', headers=dict(Authorization=access_token),  
+            content_type='application/json')
+        res1 = self.client().post('/api/v2/event/{}/rsvp'.format(results['id']),
+            headers=dict(Authorization= access_token),
+            content_type='application/json')
+        self.assertEqual(res1.status_code, 401)
+        self.assertIn('Logged out.', str(res1.data))
 
     def test_double_rsvp(self):
         """Test API can capture double rsvp."""
