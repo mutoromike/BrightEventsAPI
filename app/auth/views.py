@@ -5,7 +5,7 @@ from . import auth_blueprint
 from flask.views import MethodView
 from flask_bcrypt import Bcrypt
 from flask import make_response, request, jsonify
-from app.models import User
+from app.models import User, BlacklistToken
 import re
 
 
@@ -191,27 +191,56 @@ class PassReset(MethodView):
             # return an error response, telling the user he is Unauthorized
             return make_response(jsonify(response)), 401    
 
-# class LogoutView(MethodView):
-#     """This class-based view handles user logout and access token generation."""
+class LogoutView(MethodView):
+    """This class-based view handles user logout and access token blacklisting."""
 
-#     def log(self):
-#         """Handle POST request for this view. Url ---> /auth/logout"""
-                    
-#         # Invalidate the access token. This will be used as the authorization header
-#         logged_out = @
-#         access_token = user.generate_token(logged_out)
-#         if access_token:
-#             response = {
-#                 'message': 'You logged out successfully.',
-#                 'access_token': access_token.decode()
-#             }
-#             return make_response(jsonify(response)), 200
-              
+    def post(self):
+        # get auth token
+        auth_header = request.headers.get('Authorization')
+        access_token = auth_header
+
+        if access_token:
+            user_id = User.decode_token(access_token)
+            # print(user_id)
+            blacklisted = BlacklistToken.query.filter_by(token=access_token).first()
+            if not blacklisted:
+                if not isinstance(user_id, str):
+                    # mark the token as blacklisted                
+                    try:
+                        # insert the token
+                        blacklist_token = BlacklistToken(token=access_token)
+                        blacklist_token.save()
+                        response = {
+                            'message': 'Successfully logged out.'
+                        }
+                        return make_response(jsonify(response)), 200
+                    except Exception as e:
+                        response = {
+                            'message': e
+                        }
+                        return make_response(jsonify(response)), 200
+                else:
+                    response = {
+                        'message': user_id
+                    }
+                    return make_response(jsonify(response)), 401
+            else:
+                response = {
+                    'message': 'You were logged out! TOKEN EXPIRED!'
+                }
+                return make_response(jsonify(response)), 401
+        else:
+            response = {
+                'message': 'Ivalid token'
+            }
+            return make_response(jsonify(response)), 403
+                
 
 
 registration_view = RegistrationView.as_view('register_view')
 login_view = LoginView.as_view('login_view')
 pass_reset = PassReset.as_view('pass_reset_veiw')
+logout_view = LogoutView.as_view('logout_view')
 # Define the rule for the registration url --->  /api/v2/auth/register
 # Then add the rule to the blueprint
 auth_blueprint.add_url_rule(
@@ -233,4 +262,12 @@ auth_blueprint.add_url_rule(
     '/api/v2/auth/reset-password',
     view_func=pass_reset,
     methods=['PUT']
+)
+
+# Define the rule for the logout url --->  /api/v2/auth/logout
+# Then add the rule to the blueprint
+auth_blueprint.add_url_rule(
+    '/api/v2/auth/logout',
+    view_func=logout_view,
+    methods=['POST']
 )
