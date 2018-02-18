@@ -195,12 +195,12 @@ class AuthTestCase(unittest.TestCase):
         res = self.register_user(self.user_data)
         self.assertEqual(res.status_code, 201)
         # Get token        
-        access_token = self.get_token()       
+        access_token = self.get_token()
         # define a dictionary to represent the new passwords
         edit_password = {
             'npassword': 'ulembaya',
             'cnfpassword': 'ulembaya'
-        }        
+        }
         # send a PUT request to /api/v2/auth/reset-password with the data above
         res = self.client().put('/api/v2/auth/reset-password', headers=dict(Authorization= access_token), \
         data=json.dumps(edit_password), content_type='application/json')
