@@ -387,7 +387,7 @@ class EventsTestCase(unittest.TestCase):
         access_token = self.get_token()
 
         # create an event by making a POST request
-        res = self.client().post('/api/v2/events',
+        self.client().post('/api/v2/events',
             headers=dict(Authorization= access_token), 
             data=json.dumps(self.event), content_type='application/json')
 
