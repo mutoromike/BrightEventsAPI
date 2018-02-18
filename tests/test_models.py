@@ -158,8 +158,6 @@ class EventsTestCase(unittest.TestCase):
             '/api/v2/events',
             headers=dict(Authorization= access_token),
             data=json.dumps(self.event), content_type='application/json')
-
-        # assert that the event is created 
         self.assertEqual(req.status_code, 201)
         # get the response data in json format
         results = json.loads(req.data.decode())
