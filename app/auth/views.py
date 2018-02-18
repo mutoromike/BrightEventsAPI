@@ -20,7 +20,7 @@ class RegistrationView(MethodView):
         user = User.query.filter_by(email=req['email']).first()
         user_name = User.query.filter_by(username=req['username']).first()
         
-        username = req['username']                
+        username = req['username']
         email = req['email']
         password = req['password']
         cpassword = req['cpassword']
@@ -37,11 +37,10 @@ class RegistrationView(MethodView):
                             # Verify passwords are matching
                             if len(password)>6 and len(username)>5:
                                 # Check password and username length
-                                try:                    
+                                try:
                                     # Register the user
-                                    user = User(username=username, email=email, password=password)                
+                                    user = User(username=username, email=email, password=password)
                                     user.save()
-
                                     response = {
                                         'message': 'You registered successfully. Please log in.'
                                     }
@@ -160,8 +159,7 @@ class PassReset(MethodView):
                             user.save()
                             response = {
                                 'message': 'Password changed successfully.'
-                            }                                                       
-
+                            }
                         except Exception as e:
                             # Create a response containing an string error message
                             response = {
@@ -181,8 +179,8 @@ class PassReset(MethodView):
                 response = {
                     'message': 'You can only edit your own password'
                 }
-                return make_response(jsonify(response)), 401                
-			
+                return make_response(jsonify(response)), 401
+                		
             # user is not legit, so the payload is an error message
             message = user_id
             response = {
