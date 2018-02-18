@@ -162,7 +162,3 @@ class BlacklistToken(db.Model):
 
     def __repr__(self):
         return '<id: token: {}'.format(self.token)
-
-
-
-    
