@@ -13,7 +13,7 @@ class DevelopmentConfig(Config):
     """ Configurations for Development."""
     DEBUG = True
     SECRET_KEY = os.getenv('SECRET_KEY')
-    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL') 
+    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL')
     # SQLALCHEMY_DATABASE_URI = postgres_local_base + database_name
 
 class TestingConfig(Config):
@@ -21,7 +21,7 @@ class TestingConfig(Config):
     TESTING = True
     DEBUG = True
     SECRET_KEY = os.getenv('SECRET_KEY')
-    SQLALCHEMY_DATABASE_URI = os.getenv('TEST_DB_URL')
+    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL')
 
 class StagingConfig(Config):
     """ Configurations for Staging."""
@@ -29,7 +29,7 @@ class StagingConfig(Config):
 
 class ProductionConfig(Config):
     """ Configurations for Production."""
-    SECRET_KEY = os.getenv('SECRET_KEY') 	
+    SECRET_KEY = os.getenv('SECRET_KEY')
     DEBUG = False
     TESTING = False
 
