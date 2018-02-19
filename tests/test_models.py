@@ -172,9 +172,7 @@ class EventsTestCase(unittest.TestCase):
             headers=dict(Authorization= access_token),
             data=json.dumps(self.event), content_type='application/json')
         self.assertEqual(req.status_code, 201)
-        
         results = json.loads(req.data.decode())
-
         # Edit created event
         edit={
                 "name": "Software",
