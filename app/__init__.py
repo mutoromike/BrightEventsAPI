@@ -24,12 +24,12 @@ def create_app(config_name):
 			"""Function to check login status"""
 			access_token = request.headers.get('Authorization')
 			blacklisted = BlacklistToken.query.filter_by(token=access_token).first()
-			if not blacklisted:	
-				try:							
+			if not blacklisted:
+				try:
 					return f(*args, **kwargs)
 				except KeyError:
 						response = {"message": "There was an error creating the event, please try again"}
-						return make_response(jsonify(response)), 500 			
+						return make_response(jsonify(response)), 500
 			response = {"message": "Logged out. Please login again!" }
 			return make_response(jsonify(response)), 200
 				
@@ -67,8 +67,8 @@ def create_app(config_name):
 				if request.method == "POST":
 					event = request.get_json()
 					name=event['name'].strip() 
-					category=event['category'] 
-					location=event['location'] 
+					category=event['category']
+					location=event['location']
 					date=event['date']
 					description=event['description']
 
@@ -324,10 +324,11 @@ def create_app(config_name):
 		# result = request.get_json()
 		category = request.args.get("category")
 		location = request.args.get("location")
-		q = request.args.get("q")#get q search value and use if available				
-		if category:			
+		# get q search value and use if available
+		q = request.args.get("q")						
+		if category:
 			filtered_events = Events.query.filter(Events.category.ilike('%{}%'.format(category)))\
-			.paginate(page, per_page = limit, error_out=False).items			
+			.paginate(page, per_page = limit, error_out=False).items
 			event_list = []
 			if filtered_events:
 				for event in filtered_events:
@@ -337,7 +338,7 @@ def create_app(config_name):
 				return jsonify({'Events belonging to this category': event_list}), 200
 
 			return jsonify({'message': 'There are no events related to this category'}), 404
-		elif location:								
+		elif location:
 			filtered_events = Events.query.filter(Events.location.ilike('%{}%'.format(location)))\
 			.paginate(page, per_page = limit, error_out=False).items
 			event_list = []
@@ -349,7 +350,7 @@ def create_app(config_name):
 				return jsonify({'Existing Events in this location': event_list}), 200
 
 			return jsonify({'message': 'There are no existing events in this location'}), 404
-		elif q:							
+		elif q:
 			filtered_events = Events.query.filter(Events.name.ilike('%{}%'.format(q)))\
 			.paginate(page, per_page = limit, error_out=False).items
 			event_list = []
