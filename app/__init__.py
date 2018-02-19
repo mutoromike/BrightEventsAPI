@@ -74,7 +74,7 @@ def create_app(config_name):
 
 					if not event['name'] or not event['category'] or \
 					not event['location'] or not event['date']:
-						# Check whether fields are not empty												
+						# Check whether fields are not empty
 						response = {"message" : "Event details cannot be empty!"}
 						return make_response(jsonify(response)), 400
 
@@ -86,13 +86,13 @@ def create_app(config_name):
 					(created_by=user_id).filter_by(location=location).first()
 					if existing:
 						response = {"message" : "A similar event already exists!"}
-						return make_response(jsonify(response)), 302					
+						return make_response(jsonify(response)), 302
 					try:
 						created_event = Events(
-										name=name, 
-										category=category, 
+										name=name,
+										category=category,
 										location=location, 
-										date=date, 
+										date=date,
 										description=description,
 										created_by = user_id
 										)
@@ -250,7 +250,7 @@ def create_app(config_name):
 					# Get the event with the id specified from the URL (<int:id>)
 					event = Events.query.filter_by(id=event_id).first()
 					if event:
-						# Check to see if event exists					
+						# Check to see if event exists
 						if request.method == 'POST':
 							current_user = User.query.filter_by(id=user_id).first()
 							print(current_user)
