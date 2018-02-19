@@ -136,8 +136,8 @@ class AuthTestCase(unittest.TestCase):
         reg_data = {
                     'username':'chris',
                     'email': 'test@example.com',
-                    'password': 'test_password',
-                    'cpassword': 'test_password'
+                    'password': 'J@yd33n',
+                    'cpassword': 'J@yd33n'
                 }
         res = res = self.register_user(self.user_data)
         self.assertEqual(res.status_code, 201)
@@ -153,8 +153,8 @@ class AuthTestCase(unittest.TestCase):
         reg_data = {
                     'username':'chrisevans',
                     'email': 'test1@examplecom',
-                    'password': 'test_password',
-                    'cpassword': 'test_password'
+                    'password': 'J@yd33n',
+                    'cpassword': 'J@yd33n'
                 }
 
         res = res = self.register_user(self.user_data)
@@ -186,7 +186,7 @@ class AuthTestCase(unittest.TestCase):
         # define a dictionary to represent an unregistered user
         not_a_user = {
             'email': 'not_a_user@example.com',
-            'password': 'nope'
+            'password': 'J@yd33n'
         }
         # send a POST request to /auth/login with the data above
         res = self.login_user(not_a_user)
@@ -214,8 +214,8 @@ class AuthTestCase(unittest.TestCase):
         access_token = self.get_token()
         # define a dictionary to represent the new passwords
         edit_password = {
-            'npassword': 'ulembaya',
-            'cnfpassword': 'ulembaya'
+            'npassword': 'J@yd33n56',
+            'cnfpassword': 'J@yd33n56'
         }
         # send a PUT request to /api/v2/auth/reset-password with the data above
         res = self.client().put('/api/v2/auth/reset-password', headers=dict(Authorization= access_token), \
