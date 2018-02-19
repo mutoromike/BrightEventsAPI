@@ -18,12 +18,12 @@ class AuthTestCase(unittest.TestCase):
         self.user_data = {
             'username':'chrisevans',
             'email': 'test@example.com',
-            'password': 'test_password',
-            'cpassword': 'test_password'
+            'password': 'J@yd33n',
+            'cpassword': 'J@yd33n'
         }
         self.login_data = {
             'email': 'test@example.com',
-            'password': 'test_password'
+            'password': 'J@yd33n'
         }
 
         with self.app.app_context():
@@ -56,8 +56,8 @@ class AuthTestCase(unittest.TestCase):
         reg_data = {
                     'username':'chris# evans',
                     'email': 'test@example.com',
-                    'password': 'test_password',
-                    'cpassword': 'test_password'
+                    'password': 'J@yd33n',
+                    'cpassword': 'J@yd33n'
                 }
 
         res = self.register_user(reg_data)
@@ -72,8 +72,8 @@ class AuthTestCase(unittest.TestCase):
         reg_data = {
                     'username':'chrisevans',
                     'email': 'test@examplecom',
-                    'password': 'test_password',
-                    'cpassword': 'test_password'
+                    'password': 'J@yd33n',
+                    'cpassword': 'J@yd33n'
                 }
 
         res = self.register_user(reg_data)
@@ -88,8 +88,8 @@ class AuthTestCase(unittest.TestCase):
         reg_data = {
                     'username':'chrisevans',
                     'email': 'test@example.com',
-                    'password': 'test_password',
-                    'cpassword': 'testpassword'
+                    'password': 'J@yd33n',
+                    'cpassword': 'J@yd33na'
                 }
 
         res = res = self.register_user(reg_data)
@@ -99,20 +99,36 @@ class AuthTestCase(unittest.TestCase):
         self.assertEqual(result['message'], "The passwords should match!")
         self.assertEqual(res.status_code, 403)
 
-    def test_username_and_and_pass(self):
-        """Test if passwords are matching."""
+    def test_username_length(self):
+        """Test username lenght."""
         reg_data = {
                     'username':'csi',
                     'email': 'test@example.com',
-                    'password': 'testpass',
-                    'cpassword': 'testpass'
+                    'password': 'J@yd33n',
+                    'cpassword': 'J@yd33n'
                 }
 
         res = res = self.register_user(reg_data)
         # get the results returned in json format
         result = json.loads(res.data.decode())
         # assert that the request contains an error message and a 403 status code
-        self.assertIn("Username and password must be more than", result['message'])
+        self.assertIn("Username must be more than 5 characters", result['message'])
+        self.assertEqual(res.status_code, 403)
+
+    def test_password_strength(self):
+        """Test if password is strong."""
+        reg_data = {
+                    'username':'chrisevans',
+                    'email': 'test@example.com',
+                    'password': 'badpassword',
+                    'cpassword': 'badpassword'
+                }
+
+        res = res = self.register_user(reg_data)
+        # get the results returned in json format
+        result = json.loads(res.data.decode())
+        # assert that the request contains an error message and a 403 status code
+        self.assertIn("Password length should be more than 5 characters", result['message'])
         self.assertEqual(res.status_code, 403)
 
     def test_already_registered_user(self):
