@@ -23,23 +23,23 @@ class EventsTestCase(unittest.TestCase):
         self.user_data = {
             'username': "chrisevans",
             'email': "test@example.com",
-            'password': "test_password",
-            'cpassword': "test_password"
+            'password': "J@yd33n",
+            'cpassword': "J@yd33n"
         }
         self.login_data = {
             'email': "test@example.com",
-            'password': "test_password"
+            'password': "J@yd33n"
         }
 
         self.user_data2 = {
             'username': "brucebarner",
             'email': "bruce@infinity.com",
-            'password': "strongestavenger",
-            'cpassword': "strongestavenger"
+            'password': "sTr0ng3st@venger",
+            'cpassword': "sTr0ng3st@venger"
         }
         self.login_data2 = {
             'email': "bruce@infinity.com",
-            'password': "strongestavenger"
+            'password': "sTr0ng3st@venger"
         }
 
         # binds the app to the current context
@@ -466,8 +466,7 @@ class EventsTestCase(unittest.TestCase):
         self.assertEqual(res.status_code, 201)
 
         # get all the event that belong to the test user by making a GET request
-        res = self.client().post('/api/v2/search',
-            data=json.dumps({'category': 'learn'}), content_type='application/json')
+        res = self.client().post('/api/v2/search?category=learn', content_type='application/json')
         self.assertEqual(res.status_code, 404)
 
     def tearDown(self):
