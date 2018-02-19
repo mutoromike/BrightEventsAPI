@@ -51,7 +51,7 @@ def create_app(config_name):
 	
 	@app.route('/api/v2/events', methods=['POST', 'GET'])
 	@app.route('/api/v2/events/page=<int:page>&limit=<int:limit>', methods=['GET'])
-	@authorize	
+	@authorize
 	def events(limit=4, page=1):
 
 		# Get the access token from the header
