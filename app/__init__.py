@@ -24,10 +24,15 @@ def create_app(config_name):
 			"""Function to check login status"""
 			access_token = request.headers.get('Authorization')
 			blacklisted = BlacklistToken.query.filter_by(token=access_token).first()
-			if not blacklisted:
-				return f(*args, **kwargs)
+			if not blacklisted:	
+				try:							
+					return f(*args, **kwargs)
+				except KeyError:
+						response = {"message": "There was an error creating the event, please try again"}
+						return make_response(jsonify(response)), 500 			
 			response = {"message": "Logged out. Please login again!" }
 			return make_response(jsonify(response)), 200
+				
 		return check
 
 	def checkToken():
@@ -45,9 +50,9 @@ def create_app(config_name):
 		return jsonify({"message": "Welcome to Bright Events"})
 	
 	@app.route('/api/v2/events', methods=['POST', 'GET'])
-	@app.route('/api/v2/events/page=<int:page>', methods=['GET'])
+	@app.route('/api/v2/events/page=<int:page>&limit=<int:limit>', methods=['GET'])
 	@authorize	
-	def events(page=1):
+	def events(limit=4, page=1):
 
 		# Get the access token from the header
 		auth_header = request.headers.get('Authorization')
@@ -78,7 +83,7 @@ def create_app(config_name):
 						return make_response(jsonify(response)), 400
 
 					existing=Events.query.filter_by(name=name).filter_by(category=category).filter_by\
-					(created_by=user_id).first()
+					(created_by=user_id).filter_by(location=location).first()
 					if existing:
 						response = {"message" : "A similar event already exists!"}
 						return make_response(jsonify(response)), 302					
@@ -101,16 +106,16 @@ def create_app(config_name):
 							'description' : created_event.description,
 							'created_by' : created_event.created_by
 						})
-							
 
 					except AttributeError:
 						response = {"message": "There was an error creating the event, please try again"}
 						return make_response(jsonify(response)), 500
+											
 					return make_response(response), 201
 
 				else:
 					# GET
-					events = Events.query.filter_by(created_by=user_id).paginate(page, per_page = 3, error_out=True).items
+					events = Events.query.filter_by(created_by=user_id).paginate(page, per_page = limit, error_out=True).items
 					# Query all
 					# events = Events.query.paginate(page, per_page = 3, error_out=True).items
 					# events = Events.get_all(user_id)
@@ -127,7 +132,6 @@ def create_app(config_name):
 
 						}
 						results.append(obj)
-
 					return make_response(jsonify(results)), 200
 			
 			else:
@@ -180,26 +184,35 @@ def create_app(config_name):
 					return jsonify(response), 401
 
 				elif request.method == 'PUT':
+					created_by = event.created_by
+					print(created_by)
+					if user_id == created_by:
 					# Obtain the new name of the event from the request data
-					edited = request.get_json()
+						edited = request.get_json()
 
-					event.name=edited['name']
-					event.category=edited['category']
-					event.location=edited['location']
-					event.date=edited['date']
-					event.description=edited['description']
-					event.save()
+						event.name=edited['name']
+						event.category=edited['category']
+						event.location=edited['location']
+						event.date=edited['date']
+						event.description=edited['description']
+						event.save()
 
+						response = {
+							'id': event.id,
+							'name' : event.name,
+							'category' : event.category,
+							'location' : event.location,
+							'date' : event.date,
+							'description' : event.description
+						}
+
+						msg = {"message": "Event update successful"}
+						
+						return make_response(jsonify(msg)), 200
 					response = {
-						'id': event.id,
-						'name' : event.name,
-						'category' : event.category,
-						'location' : event.location,
-						'date' : event.date,
-						'description' : event.description
+						"message": "You can only modify your own event"
 					}
-					
-					return make_response(jsonify(response)), 200
+					return jsonify(response), 401
 				else:
 					# Handle GET request, sending back the event to the user
 					response = {
@@ -283,9 +296,10 @@ def create_app(config_name):
 
 	@app.route('/api/v2/events/all', methods=['GET'])
 	@app.route('/api/v2/events/all/page=<int:page>', methods=['GET'])
-	def all_events(page=1):
+	@app.route('/api/v2/events/all/page=<int:page>&limit=<int:limit>', methods=['GET'])
+	def all_events(limit=4, page=1):
 		"""Get all events in the system, no login required"""
-		events = Events.query.paginate(page, per_page = 6, error_out=True).items
+		events = Events.query.paginate(page, per_page = limit, error_out=False).items
 		results = []
 
 		for event in events:
@@ -303,15 +317,17 @@ def create_app(config_name):
 		return make_response(jsonify(results)), 200
 
 	@app.route('/api/v2/search', methods=['POST'])
-	@app.route('/api/v2/search/page=<int:page>', methods=['POST'])
-	def search(page=1):
+	@app.route('/api/v2/search/page=<int:page>&limit=<int:limit>', methods=['POST'])
+	def search(limit=2, page=1):
 		"""Search for events in the system"""
 		# events = Events.query.paginate(page, per_page = 6, error_out=True).items
-		result = request.get_json()
-		try:
-			category = result['category']
-			filtered_events = Events.query.filter(Events.category.ilike("%" + category + "%"))\
-			.paginate(page, per_page = 6, error_out=True).items
+		# result = request.get_json()
+		category = request.args.get("category")
+		location = request.args.get("location")
+		q = request.args.get("q")#get q search value and use if available				
+		if category:			
+			filtered_events = Events.query.filter(Events.category.ilike('%{}%'.format(category)))\
+			.paginate(page, per_page = limit, error_out=False).items			
 			event_list = []
 			if filtered_events:
 				for event in filtered_events:
@@ -321,22 +337,32 @@ def create_app(config_name):
 				return jsonify({'Events belonging to this category': event_list}), 200
 
 			return jsonify({'message': 'There are no events related to this category'}), 404
-		except KeyError:
-			try:
-				location = result['location']
-				filtered_events = Events.query.filter(Events.location.ilike("%" + location + "%"))\
-				.paginate(page, per_page = 6, error_out=True).items
-				event_list = []
-				if filtered_events:
-					for event in filtered_events:
-						found_event = {'name': event.name, 'category': event.category, 'location': event.location,\
-						'date': event.date, 'description': event.description}
-						event_list.append(found_event)
-					return jsonify({'Existing Events in this location': event_list}), 200
+		elif location:								
+			filtered_events = Events.query.filter(Events.location.ilike('%{}%'.format(location)))\
+			.paginate(page, per_page = limit, error_out=False).items
+			event_list = []
+			if filtered_events:
+				for event in filtered_events:
+					found_event = {'name': event.name, 'category': event.category, 'location': event.location,\
+					'date': event.date, 'description': event.description}
+					event_list.append(found_event)
+				return jsonify({'Existing Events in this location': event_list}), 200
 
-				return jsonify({'message': 'There are no existing events in this location'}), 404
-			except KeyError:
-				return jsonify({'Warning': 'Cannot comprehend the given search parameter'})
+			return jsonify({'message': 'There are no existing events in this location'}), 404
+		elif q:							
+			filtered_events = Events.query.filter(Events.name.ilike('%{}%'.format(q)))\
+			.paginate(page, per_page = limit, error_out=False).items
+			event_list = []
+			if filtered_events:
+				for event in filtered_events:
+					found_event = {'name': event.name, 'category': event.category, 'location': event.location,\
+					'date': event.date, 'description': event.description}
+					event_list.append(found_event)
+				return jsonify({'Existing Events': event_list}), 200
+
+			return jsonify({'message': 'No existing events'}), 404
+		else:
+			return jsonify({'Warning': 'Cannot comprehend the given search parameter'})
 				
 	from .auth import auth_blueprint
 	app.register_blueprint(auth_blueprint)
