@@ -48,7 +48,6 @@ class EventsTestCase(unittest.TestCase):
             db.create_all()
 
     def register_user(self, data):
-        
         return self.client().post('api/v2/auth/register', data=json.dumps(data), content_type='application/json' )
 
     def login_user(self, data):
@@ -75,8 +74,8 @@ class EventsTestCase(unittest.TestCase):
         """
         access_token = self.get_token()  
 
-        result = self.client().post('/api/v2/events', headers=dict(Authorization=access_token), 
-            data=json.dumps(self.event), content_type='application/json' )
+        result = self.client().post('/api/v2/events', headers=dict(Authorization=access_token),
+        data=json.dumps(self.event), content_type='application/json' )
         self.assertEqual(result.status_code, 201)
         self.assertEqual(self.event['name'], 'birthday')
 
@@ -86,10 +85,9 @@ class EventsTestCase(unittest.TestCase):
         """
         access_token = self.get_token()
         myevent = {'name': "", 'category': "", 'location': "", 'date': "",\
-        'description': 'Everyone is welcome'}  
-
-        res = self.client().post('/api/v2/events', headers=dict(Authorization=access_token), 
-            data=json.dumps(myevent), content_type='application/json' )
+        'description': 'Everyone is welcome'}
+        res = self.client().post('/api/v2/events', headers=dict(Authorization=access_token),
+        data=json.dumps(myevent), content_type='application/json' )
         self.assertEqual(res.status_code, 400)
         result = json.loads(res.data.decode())
         print(result)
