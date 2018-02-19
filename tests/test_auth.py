@@ -198,13 +198,7 @@ class AuthTestCase(unittest.TestCase):
         self.assertEqual(res.status_code, 401)
         self.assertEqual(
             result['message'], "Invalid email or password, Please try again")
-    
-    def get_token(self):
-        """register and login a user to get an access token"""
-        result = self.login_user(self.login_data)
-        access_token = json.loads(result.data.decode())['access_token']
-        return access_token
-
+   
     def test_successful_pass_editing(self):
         """Test successful password editing."""
         # Create a user
