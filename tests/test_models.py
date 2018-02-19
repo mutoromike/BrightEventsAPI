@@ -51,7 +51,6 @@ class EventsTestCase(unittest.TestCase):
         return self.client().post('api/v2/auth/register', data=json.dumps(data), content_type='application/json' )
 
     def login_user(self, data):
-        
         return self.client().post('/api/v2/auth/login', data=json.dumps(data), content_type='application/json' )
 
     def get_token(self):
@@ -99,10 +98,9 @@ class EventsTestCase(unittest.TestCase):
         """
         access_token = self.get_token()
         myevent = {'name': "@# ha&(", 'category': "Development", 'location': "Nairobi", 'date': "12/12/2018",\
-        'description': 'Everyone is welcome'}  
-
-        res = self.client().post('/api/v2/events', headers=dict(Authorization=access_token), 
-            data=json.dumps(myevent), content_type='application/json' )
+        'description': 'Everyone is welcome'}
+        res = self.client().post('/api/v2/events', headers=dict(Authorization=access_token),
+        data=json.dumps(myevent), content_type='application/json' )
         self.assertEqual(res.status_code, 400)
         result = json.loads(res.data.decode())
         print(result)
