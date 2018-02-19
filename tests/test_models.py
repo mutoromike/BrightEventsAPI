@@ -80,7 +80,7 @@ class EventsTestCase(unittest.TestCase):
 
     def test_empty_event_fields(self):
         """
-        Test empty event fields.    
+        Test empty event fields.
         """
         access_token = self.get_token()
         myevent = {'name': "", 'category': "", 'location': "", 'date': "",\
@@ -94,7 +94,7 @@ class EventsTestCase(unittest.TestCase):
 
     def test_special_characters_in_event_name(self):
         """
-        Test special characters.    
+        Test special characters.
         """
         access_token = self.get_token()
         myevent = {'name': "@# ha&(", 'category': "Development", 'location': "Nairobi", 'date': "12/12/2018",\
@@ -122,11 +122,9 @@ class EventsTestCase(unittest.TestCase):
         # get all the event that belong to the test user by making a GET request
         res = self.client().get(
             '/api/v2/events',
-            headers=dict(Authorization= access_token),
-        )
+            headers=dict(Authorization= access_token))
         self.assertEqual(res.status_code, 200)
         self.assertEqual(self.event['name'], 'birthday')
-    
     def test_getting_all_events(self):
         """
         Test API can get all Events in the system (GET request).
@@ -290,13 +288,13 @@ class EventsTestCase(unittest.TestCase):
 
         results = json.loads(req.data.decode())
         # RSVP to event
-        res = self.client().post('/api/v2/auth/logout', headers=dict(Authorization=access_token),  
-            content_type='application/json')
-        res1 = self.client().post('/api/v2/event/{}/rsvp'.format(results['id']),
+        self.client().post('/api/v2/auth/logout', headers=dict(Authorization=access_token),
+        content_type='application/json')
+        res = self.client().post('/api/v2/event/{}/rsvp'.format(results['id']),
             headers=dict(Authorization= access_token),
             content_type='application/json')
-        self.assertEqual(res1.status_code, 401)
-        self.assertIn('Logged out.', str(res1.data))
+        self.assertEqual(res.status_code, 401)
+        self.assertIn('Logged out.', str(res.data))
 
     def test_double_rsvp(self):
         """Test API can capture double rsvp."""
