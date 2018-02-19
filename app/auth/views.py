@@ -63,7 +63,7 @@ class RegistrationView(MethodView):
                                 }
                                 # return an error message if requirement not met
                                 # 403 - failed authentication
-                                return make_response(jsonify(response)), 403                    
+                                return make_response(jsonify(response)), 403
                             response = {
                                 'message': 'Username must be more than 5 characters'
                             }
