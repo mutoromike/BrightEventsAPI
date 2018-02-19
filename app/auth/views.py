@@ -35,27 +35,37 @@ class RegistrationView(MethodView):
                         # Check email validity
                         if (password==cpassword):
                             # Verify passwords are matching
-                            if len(password)>6 and len(username)>5:
-                                # Check password and username length
-                                try:
-                                    # Register the user
-                                    user = User(username=username, email=email, password=password)
-                                    user.save()
-                                    response = {
-                                        'message': 'You registered successfully. Please log in.'
-                                    }
-                                    # return a response notifying the user that they registered successfully
-                                        
-                                except Exception as e:
-                                    # An error occured, therefore return a string message containing the error
-                                    response = {
-                                        'message': str(e)
-                                    }
-                                    return make_response(jsonify(response)), 401
-                                return make_response(jsonify(response)), 201
-                    
+                            if len(username)>5:
+                                # Checkusername length
+                                if len(req['password']) > 5 and re.search("[a-z]", req['password']) and\
+                                re.search("[0-9]", req['password']) and re.search("[A-Z]", req['password']) \
+                                and re.search("[$#@]", req['password']):
+                                    try:
+                                        # Register the user
+                                        user = User(username=username, email=email, password=password)
+                                        user.save()
+                                        response = {
+                                            'message': 'You registered successfully. Please log in.'
+                                        }
+                                        # return a response notifying the user that they registered successfully
+                                            
+                                    except Exception as e:
+                                        # An error occured, therefore return a string message containing the error
+                                        response = {
+                                            'message': str(e)
+                                        }
+                                        return make_response(jsonify(response)), 401
+                                    return make_response(jsonify(response)), 201
+
+                                response = {
+                                    'message': 'Password length should be more than 5 characters, '\
+                                        'have one lowercase, uppercase, number and special character'
+                                }
+                                # return an error message if requirement not met
+                                # 403 - failed authentication
+                                return make_response(jsonify(response)), 403                    
                             response = {
-                                'message': 'Username and password must be more than 5 and 6 characters respectively'
+                                'message': 'Username must be more than 5 characters'
                             }
                             # return an error message if requirement not met
                             # 403 - failed authentication
