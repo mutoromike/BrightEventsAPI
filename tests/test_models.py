@@ -125,6 +125,7 @@ class EventsTestCase(unittest.TestCase):
             headers=dict(Authorization= access_token))
         self.assertEqual(res.status_code, 200)
         self.assertEqual(self.event['name'], 'birthday')
+
     def test_getting_all_events(self):
         """
         Test API can get all Events in the system (GET request).
@@ -196,12 +197,11 @@ class EventsTestCase(unittest.TestCase):
     def test_deleting_of_existing_event(self):
         """Test User can only delete an existing event"""
         access_token = self.get_token()
-
-        req = self.client().post(
+        # Create event
+        self.client().post(
             '/api/v2/events',
             headers=dict(Authorization= access_token),
             data=json.dumps(self.event), content_type='application/json')
-        self.assertEqual(req.status_code, 201)
 
         # Delete created event
         res = self.client().delete(
