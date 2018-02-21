@@ -17,17 +17,20 @@ def authorize(f):
         access_token = request.headers.get('Authorization')
         blacklisted = BlacklistToken.query.filter_by(token=access_token).first()
         user_id = User.decode_token(access_token)
-        msg = {'message': 'user_id'}
+        # Check if the token is blacklisted
         if blacklisted:
             response = {"message": "Logged out. Please login again!" }
             return make_response(jsonify(response)), 401
+        # Get user_id from the token
         if not isinstance(user_id, str):
             try:
                 current_user = User.query.filter_by(id=user_id).first()
                 return f(current_user, user_id, *args, **kwargs)
             except KeyError:
-                response = {"message": "There was an error creating the event, please try again"}
+                response = {"message": "One or more event attributes are missing!"}
                 return make_response(jsonify(response)), 500
+        
+        msg = {'message': 'Invalid token or Token has expired'}
         return make_response(jsonify(msg)), 401
     return check
 
@@ -81,9 +84,10 @@ def create(current_user, user_id, limit=4, page=1):
     return make_response(response), 201
     
 @events.route('/api/v2/events', methods=['GET'])
+@events.route('/api/v2/events/page=<int:page>', methods=['GET'])
 @events.route('/api/v2/events/page=<int:page>&limit=<int:limit>', methods=['GET'])
 @authorize
-def myevents(current_user, user_id, limit=4, page=1):
+def my_events(current_user, user_id, limit=4, page=1):
     # GET
     events = Events.query.filter_by(created_by=user_id).paginate(page, per_page = limit, \
     error_out=True).items
