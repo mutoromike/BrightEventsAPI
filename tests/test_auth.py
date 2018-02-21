@@ -35,13 +35,11 @@ class AuthTestCase(unittest.TestCase):
     def register_user(self, data):        
         return self.client().post('api/v2/auth/register', data=json.dumps(data), content_type='application/json' )
 
-    def login_user(self, data):        
-        return self.client().post('/api/v2/auth/login', data=json.dumps(data), content_type='application/json' )    
-
-
+    def login_user(self, data):
+        return self.client().post('/api/v2/auth/login', data=json.dumps(data), content_type='application/json' )
+    
     def test_registration(self):
         """Test user registration works correcty."""
-        
         res = self.register_user(self.user_data)
         # get the results returned in json format
         result = json.loads(res.data.decode())
@@ -138,10 +136,10 @@ class AuthTestCase(unittest.TestCase):
                     'cpassword': 'J@yd33n'
                 }
         self.register_user(self.user_data)
-        second_res = res = self.register_user(reg_data)
-        self.assertEqual(second_res.status_code, 202)
+        res = self.register_user(reg_data)
+        self.assertEqual(res.status_code, 202)
         # get the results returned in json format
-        result = json.loads(second_res.data.decode())
+        result = json.loads(res.data.decode())
         self.assertEqual(
             result['message'], "User already exists. Please login.")
 
@@ -242,12 +240,10 @@ class AuthTestCase(unittest.TestCase):
         # Get token
         access_token = self.get_token()        
         # Logout user
-        res = self.client().post('/api/v2/auth/logout', headers=dict(Authorization=access_token),  
-            content_type='application/json')
-        res1 = self.client().post('/api/v2/auth/logout', headers=dict(Authorization=access_token),  
-            content_type='application/json')     
-        self.assertEqual(res1.status_code, 401)
-        result = json.loads(res1.data.decode())
+        self.client().post('/api/v2/auth/logout', headers=dict(Authorization=access_token),
+        content_type='application/json')
+        res = self.client().post('/api/v2/auth/logout', headers=dict(Authorization=access_token),
+        content_type='application/json')     
+        self.assertEqual(res.status_code, 401)
+        result = json.loads(res.data.decode())
         self.assertIn('Logged out. Please', result['message'])
-
-    
