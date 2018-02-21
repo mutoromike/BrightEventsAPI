@@ -16,14 +16,20 @@ def authorize(f):
         """Function to check login status"""
         access_token = request.headers.get('Authorization')
         blacklisted = BlacklistToken.query.filter_by(token=access_token).first()
-        if not blacklisted:
-            try:
-                return f(*args, **kwargs)
+        user_id = User.decode_token(access_token)
+        message = user_id
+        msg = {'message': 'message'}
+        if blacklisted:
+            response = {"message": "Logged out. Please login again!" }
+            return make_response(jsonify(response)), 401
+        if not isinstance(user_id, str):
+            try:                
+                current_user = User.query.filter_by(id=user_id).first()
+                return f(current_user, user_id, *args, **kwargs)
             except KeyError:
-                    response = {"message": "There was an error creating the event, please try again"}
-                    return make_response(jsonify(response)), 500
-        response = {"message": "Logged out. Please login again!" }
-        return make_response(jsonify(response)), 401
+                response = {"message": "There was an error creating the event, please try again"}
+                return make_response(jsonify(response)), 500          
+        return make_response(jsonify(msg)), 401
             
     return check
 
@@ -44,219 +50,152 @@ def index():
 
     return jsonify({"message": "Welcome to Bright Events"})
 
-@events.route('/api/v2/events', methods=['POST', 'GET'])
+@events.route('/api/v2/events', methods=['POST'])
+@authorize
+def create(current_user, user_id, limit=4, page=1):
+    event = request.get_json()
+    name=event['name'].strip() 
+    category=event['category']
+    location=event['location']
+    date=event['date']
+    description=event['description']
+    new_event = validate_data(event)
+    if new_event is not event:
+        return jsonify({"message":new_event}), 400
+
+    existing=Events.query.filter_by(name=name).filter_by(category=category).filter_by\
+    (created_by=user_id).filter_by(location=location).first()
+    
+    if existing:
+        response = {"message" : "A similar event already exists!"}
+        return make_response(jsonify(response)), 302
+    
+    try:
+        created_event = Events(name=name, category=category, location=location, 
+                        date=date, description=description, created_by = user_id
+                        )
+        created_event.save()
+        response = jsonify({
+            'id': created_event.id, 'name' : created_event.name, 'category' : created_event.category,
+            'location' : created_event.location, 'date' : created_event.date,
+            'description' : created_event.description, 'created_by' : created_event.created_by
+        })
+
+    except KeyError:
+        response = {"message": "There was an error creating the event, please try again"}
+        return make_response(jsonify(response)), 500
+                            
+    return make_response(response), 201                
+
+@events.route('/api/v2/events', methods=['GET'])
 @events.route('/api/v2/events/page=<int:page>&limit=<int:limit>', methods=['GET'])
 @authorize
-def create(limit=4, page=1):
+def myevents(current_user, user_id, limit=4, page=1):
+    # GET
+    events = Events.query.filter_by(created_by=user_id).paginate(page, per_page = limit, \
+    error_out=True).items
+    # Query all
+    # events = Events.query.paginate(page, per_page = 3, error_out=True).items
+    # events = Events.get_all(user_id)
+    results = []
 
-    # Get the access token from the header
-    auth_header = request.headers.get('Authorization')
-    access_token = auth_header
+    for event in events:
+        obj = {
+            'id': event.id, 'name' : event.name, 'category' : event.category,
+            'location' : event.location, 'date' : event.date, 'description' : event.description
+        }
+        results.append(obj)
+    return make_response(jsonify(results)), 200
 
-    if access_token:
-        # Attempt to decode the token and get the User ID
-        user_id = User.decode_token(access_token)
-        if not isinstance(user_id, str):
-            # Go ahead and handle the request, the user is authenticated
-
-            if request.method == "POST":
-                event = request.get_json()
-                name=event['name'].strip() 
-                category=event['category']
-                location=event['location']
-                date=event['date']
-                description=event['description']
-                new_event = validate_data(event)
-                if new_event is not event:
-                    return jsonify({"message":new_event}), 400
-
-                existing=Events.query.filter_by(name=name).filter_by(category=category).filter_by\
-                (created_by=user_id).filter_by(location=location).first()
-                
-                if existing:
-                    response = {"message" : "A similar event already exists!"}
-                    return make_response(jsonify(response)), 302
-                
-                try:
-                    created_event = Events(name=name, category=category, location=location, 
-                                    date=date, description=description, created_by = user_id
-                                    )
-                    created_event.save()
-                    response = jsonify({
-                        'id': created_event.id, 'name' : created_event.name, 'category' : created_event.category,
-                        'location' : created_event.location, 'date' : created_event.date,
-                        'description' : created_event.description, 'created_by' : created_event.created_by
-                    })
-
-                except AttributeError:
-                    response = {"message": "There was an error creating the event, please try again"}
-                    return make_response(jsonify(response)), 500
-                                        
-                return make_response(response), 201
-
-            else:
-                # GET
-                events = Events.query.filter_by(created_by=user_id).paginate(page, per_page = limit, \
-                error_out=True).items
-                # Query all
-                # events = Events.query.paginate(page, per_page = 3, error_out=True).items
-                # events = Events.get_all(user_id)
-                results = []
-
-                for event in events:
-                    obj = {
-                        'id': event.id, 'name' : event.name, 'category' : event.category,
-                        'location' : event.location, 'date' : event.date, 'description' : event.description
-                    }
-                    results.append(obj)
-                return make_response(jsonify(results)), 200
-        
-        else:
-            # user is not legit, so the payload is an error message
-            message = user_id
-            response = {
-                'message': message
-            }
-            return make_response(jsonify(response)), 401
-
-@events.route('/api/v2/events/<int:event_id>', methods=['GET', 'PUT', 'DELETE'])
+@events.route('/api/v2/events/<int:event_id>', methods=['PUT'])
 @authorize
-def event_tasks(event_id):
-    # get the access token from the authorization header
-    auth_header = request.headers.get('Authorization')
-    access_token = auth_header
+def edit_event(current_user, user_id, event_id):
+    event = Events.query.filter_by(id=event_id).first()
+    created_by = event.created_by
+    if user_id == created_by:
+    # Obtain the new name of the event from the request data
+        edited = request.get_json()
+        event.name=edited['name']
+        event.category=edited['category']
+        event.location=edited['location']
+        event.date=edited['date']
+        event.description=edited['description']
+        event.save()
 
-    if access_token:
-        # Get the user id related to this access token
-        user_id = User.decode_token(access_token)
+        response = {
+            'id': event.id, 'name' : event.name, 'category' : event.category,
+            'location' : event.location, 'date' : event.date, 'description' : event.description
+        }
 
-        if not isinstance(user_id, str):
-            # If the id is not a string(error), we have a user id
-            # Get the event with the id specified from the URL (<int:id>)
-            event = Events.query.filter_by(id=event_id).first()
-            
-            # print(event)
-            if not event:
-                # There is no event with this ID for this User, so
-                response = {
-                    "message": "Event does not exist!"
-                }
-                return jsonify(response), 404
+        msg = {"message": "Event update successful"}            
+        return make_response(jsonify(msg)), 200
+    response = {"message": "You can only modify your own event"}
+    return jsonify(response), 401
+@events.route('/api/v2/events/<int:event_id>', methods=['GET', 'DELETE'])
+@authorize
+def event_tasks(current_user, user_id, event_id):
+    """Method to Get, Update and Delete events"""
+    event = Events.query.filter_by(id=event_id).first()    
+    # print(event)
+    if not event:
+        # There is no event with this ID for this User, so
+        response = {"message": "Event does not exist!"}
+        return jsonify(response), 404
 
-            if request.method == "DELETE":
-                # delete the event using our delete method
-                # Check if event belongs to user
-                created_by = event.created_by
-                print(created_by)
-                if user_id == created_by:
-                    event.delete()
-                    response = {
-                        "message": "event {} deleted".format(event.id)
-                    }
+    if request.method == "DELETE":
+        # delete the event using our delete method
+        # Check if event belongs to user
+        created_by = event.created_by
+        print(created_by)
+        if user_id == created_by:
+            event.delete()
+            response = {"message": "event {} deleted".format(event.id)}
+            return jsonify(response), 200
+        response = {"message": "You can only delete your own event"}
+        return jsonify(response), 401
 
-                    return jsonify(response), 200
-                response = {
-                    "message": "You can only delete your own event"
-                }
-                return jsonify(response), 401
-
-            elif request.method == 'PUT':
-                created_by = event.created_by
-                print(created_by)
-                if user_id == created_by:
-                # Obtain the new name of the event from the request data
-                    edited = request.get_json()
-
-                    event.name=edited['name']
-                    event.category=edited['category']
-                    event.location=edited['location']
-                    event.date=edited['date']
-                    event.description=edited['description']
-                    event.save()
-
-                    response = {
-                        'id': event.id,
-                        'name' : event.name,
-                        'category' : event.category,
-                        'location' : event.location,
-                        'date' : event.date,
-                        'description' : event.description
-                    }
-
-                    msg = {"message": "Event update successful"}
-                    
-                    return make_response(jsonify(msg)), 200
-                response = {
-                    "message": "You can only modify your own event"
-                }
-                return jsonify(response), 401
-            else:
-                # Handle GET request, sending back the event to the user
-                response = {
-                    'id': event.id,
-                    'name' : event.name,
-                    'category' : event.category,
-                    'location' : event.location,
-                    'date' : event.date,
-                    'description' : event.description
-                }
-                return make_response(jsonify(response)), 200
-        else:
-            # user is not legit, so the payload is an error message
-            message = user_id
-            response = {
-                'message': message
-            }
-            # return an error response, telling the user he is Unauthorized
-            return make_response(jsonify(response)), 401
+    
+    else:
+        # Handle GET request, sending back the event to the user
+        response = {
+            'id': event.id, 'name' : event.name, 'category' : event.category, 'location' : event.location,
+            'date' : event.date, 'description' : event.description
+        }
+        return make_response(jsonify(response)), 200
 
 @events.route('/api/v2/event/<event_id>/rsvp', methods=['POST', 'GET'])
 @authorize
-def rsvp(event_id):
+def rsvp(current_user, user_id, event_id):
     """RSVP to an event"""
-    # get the access token from the authorization header
-    auth_header = request.headers.get('Authorization')
-    access_token = auth_header
-    if access_token:
-        # Get the user id related to this access token
-        user_id = User.decode_token(access_token)        
-        if not isinstance(user_id, str):
-            # If the id is not a string(error), we have a user id
-            # Get the event with the id specified from the URL (<int:id>)
-            event = Events.query.filter_by(id=event_id).first()
-            if event:
-                # Check to see if event exists
-                if request.method == 'POST':
-                    current_user = User.query.filter_by(id=user_id).first()
-                    print(current_user)
-                    result = event.create_reservation(current_user)
-                    print(result)
-                    if result == "Reservation Created":
-                        return jsonify({"message" : "RSVP Successful"}), 201
-                    return jsonify({"message" : "Reservation already created!"}), 302
+    event = Events.query.filter_by(id=event_id).first()
+    if not event:
+    # Check to see if event exists
+        response = {"message" : "Event does not exist!"}
+        return make_response(jsonify(response)), 404
+    if request.method == 'POST':
+        # current_user = User.query.filter_by(id=user_id).first()
+        # print(current_user)
+        result = event.create_reservation(current_user)
+        print(result)
+        if result == "Reservation Created":
+            return jsonify({"message" : "RSVP Successful"}), 201
+        return jsonify({"message" : "Reservation already created!"}), 302
 
-                guests = event.rsvp.all()
-                created_by = event.created_by
-                print(created_by)
-                if user_id == created_by:
-                    if guests:
-                        attending_visitors = []
-                        for user in guests:
-                            new= { "username" : user.username, "email" : user.email }
-                            attending_visitors.append(new)
-                        return make_response(jsonify(attending_visitors)), 200
-
-                    response = {"message" : "No visitors"}
-                    return make_response(jsonify(response)), 200
-                else:
-                    response = {"message": "You can only see visitors of your own event!"}
-                    return jsonify(response), 401
-            else:
-                response = {"message" : "Event does not exist!"}
-                return make_response(jsonify(response)), 404
-        else:
-            response = {"message" : "UNAUTHORIZED! Please login or sign up!"}
-            return make_response(jsonify(response)), 401	
+    guests = event.rsvp.all()
+    created_by = event.created_by
+    print(created_by)
+    if user_id != created_by:
+        response = {"message": "You can only see visitors of your own event!"}
+        return jsonify(response), 401
+    if not guests:
+        response = {"message" : "No visitors"}
+        return make_response(jsonify(response)), 200
+    attending_visitors = []
+    for user in guests:
+        new= { "username" : user.username, "email" : user.email }
+        attending_visitors.append(new)
+        return make_response(jsonify(attending_visitors)), 200
+        	
 
 @events.route('/api/v2/events/all', methods=['GET'])
 @events.route('/api/v2/events/all/page=<int:page>', methods=['GET'])
