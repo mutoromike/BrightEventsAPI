@@ -23,12 +23,12 @@ def authorize(f):
             response = {"message": "Logged out. Please login again!" }
             return make_response(jsonify(response)), 401
         if not isinstance(user_id, str):
-            try:                
+            try:
                 current_user = User.query.filter_by(id=user_id).first()
                 return f(current_user, user_id, *args, **kwargs)
             except KeyError:
                 response = {"message": "There was an error creating the event, please try again"}
-                return make_response(jsonify(response)), 500          
+                return make_response(jsonify(response)), 500
         return make_response(jsonify(msg)), 401
             
     return check
@@ -55,7 +55,7 @@ def index():
 def create(current_user, user_id, limit=4, page=1):
     """ Method to create event."""
     event = request.get_json()
-    name=event['name'].strip() 
+    name=event['name'].strip()
     category=event['category']
     location=event['location']
     date=event['date']
@@ -64,13 +64,13 @@ def create(current_user, user_id, limit=4, page=1):
     if new_event is not event:
         return jsonify({"message":new_event}), 400
     existing=Events.query.filter_by(name=name).filter_by(category=category).filter_by\
-    (created_by=user_id).filter_by(location=location).first()    
+    (created_by=user_id).filter_by(location=location).first()
     if existing:
         response = {"message" : "A similar event already exists!"}
         return make_response(jsonify(response)), 302    
     try:
-        created_event = Events(name=name, category=category, location=location, 
-                        date=date, description=description, created_by = user_id)
+        created_event = Events(name=name, category=category, location=location,
+        date=date, description=description, created_by = user_id)
         created_event.save()
         response = jsonify({
             'id': created_event.id, 'name' : created_event.name, 'category' : created_event.category,
@@ -122,7 +122,7 @@ def edit_event(current_user, user_id, event_id):
             'location' : event.location, 'date' : event.date, 'description' : event.description
         }
 
-        msg = {"message": "Event update successful"}            
+        msg = {"message": "Event update successful"}
         return make_response(jsonify(msg)), 200
     response = {"message": "You can only modify your own event"}
     return jsonify(response), 401
@@ -218,7 +218,7 @@ def search(limit=2, page=1):
     category = request.args.get("category")
     location = request.args.get("location")
     # get q search value and use if available
-    q = request.args.get("q")						
+    q = request.args.get("q")
     if category:
         category_events = Events.query.filter(Events.category.ilike('%{}%'.format(category)))\
         .paginate(page, per_page = limit, error_out=False).items
@@ -253,6 +253,6 @@ def search(limit=2, page=1):
             found_event = {'name': event.name, 'category': event.category, 'location': event.location,\
             'date': event.date, 'description': event.description}
             event_list.append(found_event)
-        return jsonify({'Existing Events': event_list}), 200        
+        return jsonify({'Existing Events': event_list}), 200
     else:
         return jsonify({'Warning': 'Cannot comprehend the given search parameter'})
