@@ -10,8 +10,7 @@ application has originated from the fact that people need to have access to even
 
 ## Build Status
 
-[![Build Status](https://travis-ci.org/mutoromike/BrightEventsAPI.svg?branch=master)](https://travis-ci.org/mutoromike/BrightEventsAPI)  [![![Coverage Status](https://coveralls.io/repos/github/mutoromike/BrightEventsAPI/badge.svg?branch=ft-implement-jwt-auth)](https://coveralls.io/github/mutoromike/BrightEventsAPI?branch=ft-implement-jwt-auth)  [![Codacy Badge](https://api.codacy.com/project/badge/Grade/44897ad46ed2432dacb3fd1baa34cab1)](https://www.codacy.com/app/mutoromike/BrightEventsAPI?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=mutoromike/BrightEventsAPI&amp;utm_campaign=Badge_Grade)
-
+[![Build Status](https://travis-ci.org/mutoromike/BrightEventsAPI.svg?branch=master)](https://travis-ci.org/mutoromike/BrightEventsAPI)  [![Coverage Status](https://coveralls.io/repos/github/mutoromike/BrightEventsAPI/badge.svg?branch=ft-implement-jwt-auth)](https://coveralls.io/github/mutoromike/BrightEventsAPI?branch=ft-implement-jwt-auth)  [![Codacy Badge](https://api.codacy.com/project/badge/Grade/44897ad46ed2432dacb3fd1baa34cab1)](https://www.codacy.com/app/mutoromike/BrightEventsAPI?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=mutoromike/BrightEventsAPI&amp;utm_campaign=Badge_Grade)
 
 ## Tech/Framework used
 
