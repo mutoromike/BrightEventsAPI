@@ -53,6 +53,7 @@ def index():
 @events.route('/api/v2/events', methods=['POST'])
 @authorize
 def create(current_user, user_id, limit=4, page=1):
+    """ Method to create event."""
     event = request.get_json()
     name=event['name'].strip() 
     category=event['category']
@@ -62,29 +63,23 @@ def create(current_user, user_id, limit=4, page=1):
     new_event = validate_data(event)
     if new_event is not event:
         return jsonify({"message":new_event}), 400
-
     existing=Events.query.filter_by(name=name).filter_by(category=category).filter_by\
-    (created_by=user_id).filter_by(location=location).first()
-    
+    (created_by=user_id).filter_by(location=location).first()    
     if existing:
         response = {"message" : "A similar event already exists!"}
-        return make_response(jsonify(response)), 302
-    
+        return make_response(jsonify(response)), 302    
     try:
         created_event = Events(name=name, category=category, location=location, 
-                        date=date, description=description, created_by = user_id
-                        )
+                        date=date, description=description, created_by = user_id)
         created_event.save()
         response = jsonify({
             'id': created_event.id, 'name' : created_event.name, 'category' : created_event.category,
             'location' : created_event.location, 'date' : created_event.date,
             'description' : created_event.description, 'created_by' : created_event.created_by
         })
-
     except KeyError:
         response = {"message": "There was an error creating the event, please try again"}
-        return make_response(jsonify(response)), 500
-                            
+        return make_response(jsonify(response)), 500                            
     return make_response(response), 201                
 
 @events.route('/api/v2/events', methods=['GET'])
@@ -182,7 +177,6 @@ def rsvp(current_user, user_id, event_id):
 
     guests = event.rsvp.all()
     created_by = event.created_by
-    print(created_by)
     if user_id != created_by:
         response = {"message": "You can only see visitors of your own event!"}
         return jsonify(response), 401
