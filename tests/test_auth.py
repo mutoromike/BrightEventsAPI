@@ -32,12 +32,10 @@ class AuthTestCase(unittest.TestCase):
             db.drop_all()
             db.create_all()
 
-    def register_user(self, data):
-        
+    def register_user(self, data):        
         return self.client().post('api/v2/auth/register', data=json.dumps(data), content_type='application/json' )
 
-    def login_user(self, data):
-        
+    def login_user(self, data):        
         return self.client().post('/api/v2/auth/login', data=json.dumps(data), content_type='application/json' )    
 
 
@@ -65,7 +63,7 @@ class AuthTestCase(unittest.TestCase):
         result = json.loads(res.data.decode())
         # assert that the request contains a success message and a 201 status code
         self.assertEqual(result['message'], "Username cannot have special characters!")
-        self.assertEqual(res.status_code, 400)
+        self.assertEqual(res.status_code, 403)
 
     def test_email_validity(self):
         """Test email registration validity."""
@@ -81,7 +79,7 @@ class AuthTestCase(unittest.TestCase):
         result = json.loads(res.data.decode())
         # assert that the request contains a success message and a 201 status code
         self.assertEqual(result['message'], "Provide a valid email!")
-        self.assertEqual(res.status_code, 400)
+        self.assertEqual(res.status_code, 403)
 
     def test_password_mismatch(self):
         """Test if passwords are matching."""
@@ -100,7 +98,7 @@ class AuthTestCase(unittest.TestCase):
         self.assertEqual(res.status_code, 403)
 
     def test_username_length(self):
-        """Test username lenght."""
+        """Test username length."""
         reg_data = {
                     'username':'csi',
                     'email': 'test@example.com',
@@ -108,7 +106,7 @@ class AuthTestCase(unittest.TestCase):
                     'cpassword': 'J@yd33n'
                 }
 
-        res = res = self.register_user(reg_data)
+        res = self.register_user(reg_data)
         # get the results returned in json format
         result = json.loads(res.data.decode())
         # assert that the request contains an error message and a 403 status code
@@ -124,7 +122,7 @@ class AuthTestCase(unittest.TestCase):
                     'cpassword': 'badpassword'
                 }
 
-        res = res = self.register_user(reg_data)
+        res = self.register_user(reg_data)
         # get the results returned in json format
         result = json.loads(res.data.decode())
         # assert that the request contains an error message and a 403 status code
@@ -139,8 +137,7 @@ class AuthTestCase(unittest.TestCase):
                     'password': 'J@yd33n',
                     'cpassword': 'J@yd33n'
                 }
-        res = res = self.register_user(self.user_data)
-        self.assertEqual(res.status_code, 201)
+        self.register_user(self.user_data)
         second_res = res = self.register_user(reg_data)
         self.assertEqual(second_res.status_code, 202)
         # get the results returned in json format
@@ -152,17 +149,16 @@ class AuthTestCase(unittest.TestCase):
         """Test if username already exists."""
         reg_data = {
                     'username':'chrisevans',
-                    'email': 'test1@examplecom',
+                    'email': 'test1@example.com',
                     'password': 'J@yd33n',
                     'cpassword': 'J@yd33n'
                 }
 
-        res = res = self.register_user(self.user_data)
-        self.assertEqual(res.status_code, 201)
-        second_res = self.register_user(reg_data)
-        self.assertEqual(second_res.status_code, 302)
+        self.register_user(self.user_data)
+        res = self.register_user(reg_data)
+        self.assertEqual(res.status_code, 302)
         # get the results returned in json format
-        result = json.loads(second_res.data.decode())
+        result = json.loads(res.data.decode())
         # assert that the request contains the error message
         self.assertEqual(result['message'], "Username already exists")
 
