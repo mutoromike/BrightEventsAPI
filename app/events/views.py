@@ -17,8 +17,7 @@ def authorize(f):
         access_token = request.headers.get('Authorization')
         blacklisted = BlacklistToken.query.filter_by(token=access_token).first()
         user_id = User.decode_token(access_token)
-        message = user_id
-        msg = {'message': 'message'}
+        msg = {'message': 'user_id'}
         if blacklisted:
             response = {"message": "Logged out. Please login again!" }
             return make_response(jsonify(response)), 401
@@ -30,7 +29,6 @@ def authorize(f):
                 response = {"message": "There was an error creating the event, please try again"}
                 return make_response(jsonify(response)), 500
         return make_response(jsonify(msg)), 401
-            
     return check
 
 def validate_data(event):
@@ -80,8 +78,8 @@ def create(current_user, user_id, limit=4, page=1):
     except KeyError:
         response = {"message": "There was an error creating the event, please try again"}
         return make_response(jsonify(response)), 500                            
-    return make_response(response), 201                
-
+    return make_response(response), 201
+    
 @events.route('/api/v2/events', methods=['GET'])
 @events.route('/api/v2/events/page=<int:page>&limit=<int:limit>', methods=['GET'])
 @authorize
