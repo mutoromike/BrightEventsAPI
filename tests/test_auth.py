@@ -248,6 +248,6 @@ class AuthTestCase(unittest.TestCase):
             content_type='application/json')     
         self.assertEqual(res1.status_code, 401)
         result = json.loads(res1.data.decode())
-        self.assertIn('You were logged out', result['message'])
+        self.assertIn('Logged out. Please', result['message'])
 
     
