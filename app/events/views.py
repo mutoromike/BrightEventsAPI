@@ -229,37 +229,36 @@ def search(limit=2, page=1):
         category_events = Events.query.filter(Events.category.ilike('%{}%'.format(category)))\
         .paginate(page, per_page = limit, error_out=False).items
         event_list = []
-        if category_events:
-            for event in category_events:
-                found_event = {'name': event.name, 'category': event.category, 'location': event.location,\
-                'date': event.date, 'description': event.description}
-                event_list.append(found_event)
-            return jsonify({'Events belonging to this category': event_list}), 200
+        if not category_events:
+            return jsonify({'message': 'There are no events related to this category'}), 404
+        for event in category_events:
+            found_event = {'name': event.name, 'category': event.category, 'location': event.location,\
+            'date': event.date, 'description': event.description}
+            event_list.append(found_event)
+        return jsonify({'Events belonging to this category': event_list}), 200
 
-        return jsonify({'message': 'There are no events related to this category'}), 404
+        
     elif location:
         location_events = Events.query.filter(Events.location.ilike('%{}%'.format(location)))\
         .paginate(page, per_page = limit, error_out=False).items
         event_list = []
-        if location_events:
-            for event in location_events:
-                found_event = {'name': event.name, 'category': event.category, 'location': event.location,\
-                'date': event.date, 'description': event.description}
-                event_list.append(found_event)
-            return jsonify({'Existing Events in this location': event_list}), 200
-
-        return jsonify({'message': 'There are no existing events in this location'}), 404
+        if not location_events:
+            return jsonify({'message': 'There are no existing events in this location'}), 404
+        for event in location_events:
+            found_event = {'name': event.name, 'category': event.category, 'location': event.location,\
+            'date': event.date, 'description': event.description}
+            event_list.append(found_event)
+        return jsonify({'Existing Events in this location': event_list}), 200        
     elif q:
         name_events = Events.query.filter(Events.name.ilike('%{}%'.format(q)))\
         .paginate(page, per_page = limit, error_out=False).items
         event_list = []
-        if name_events:
-            for event in name_events:
-                found_event = {'name': event.name, 'category': event.category, 'location': event.location,\
-                'date': event.date, 'description': event.description}
-                event_list.append(found_event)
-            return jsonify({'Existing Events': event_list}), 200
-
-        return jsonify({'message': 'No existing events'}), 404
+        if not name_events:
+            return jsonify({'message': 'No existing events'}), 404
+        for event in name_events:
+            found_event = {'name': event.name, 'category': event.category, 'location': event.location,\
+            'date': event.date, 'description': event.description}
+            event_list.append(found_event)
+        return jsonify({'Existing Events': event_list}), 200        
     else:
         return jsonify({'Warning': 'Cannot comprehend the given search parameter'})
