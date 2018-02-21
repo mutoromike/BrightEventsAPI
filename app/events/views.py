@@ -154,7 +154,6 @@ def event_tasks(current_user, user_id, event_id):
         response = {"message": "You can only delete your own event"}
         return jsonify(response), 401
 
-    
     else:
         # Handle GET request, sending back the event to the user
         response = {
@@ -227,11 +226,11 @@ def search(limit=2, page=1):
     # get q search value and use if available
     q = request.args.get("q")						
     if category:
-        filtered_events = Events.query.filter(Events.category.ilike('%{}%'.format(category)))\
+        category_events = Events.query.filter(Events.category.ilike('%{}%'.format(category)))\
         .paginate(page, per_page = limit, error_out=False).items
         event_list = []
-        if filtered_events:
-            for event in filtered_events:
+        if category_events:
+            for event in category_events:
                 found_event = {'name': event.name, 'category': event.category, 'location': event.location,\
                 'date': event.date, 'description': event.description}
                 event_list.append(found_event)
@@ -239,11 +238,11 @@ def search(limit=2, page=1):
 
         return jsonify({'message': 'There are no events related to this category'}), 404
     elif location:
-        filtered_events = Events.query.filter(Events.location.ilike('%{}%'.format(location)))\
+        location_events = Events.query.filter(Events.location.ilike('%{}%'.format(location)))\
         .paginate(page, per_page = limit, error_out=False).items
         event_list = []
-        if filtered_events:
-            for event in filtered_events:
+        if location_events:
+            for event in location_events:
                 found_event = {'name': event.name, 'category': event.category, 'location': event.location,\
                 'date': event.date, 'description': event.description}
                 event_list.append(found_event)
@@ -251,11 +250,11 @@ def search(limit=2, page=1):
 
         return jsonify({'message': 'There are no existing events in this location'}), 404
     elif q:
-        filtered_events = Events.query.filter(Events.name.ilike('%{}%'.format(q)))\
+        name_events = Events.query.filter(Events.name.ilike('%{}%'.format(q)))\
         .paginate(page, per_page = limit, error_out=False).items
         event_list = []
-        if filtered_events:
-            for event in filtered_events:
+        if name_events:
+            for event in name_events:
                 found_event = {'name': event.name, 'category': event.category, 'location': event.location,\
                 'date': event.date, 'description': event.description}
                 event_list.append(found_event)
