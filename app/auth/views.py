@@ -2,10 +2,11 @@
 
 from . import auth
 
-from flask.views import MethodView
 from flask_bcrypt import Bcrypt
 from flask import make_response, request, jsonify
+
 from app.models import User, BlacklistToken
+from app.events.views import authorize
 import re
 
 
@@ -99,102 +100,52 @@ def login():
         return make_response(jsonify(response)), 500
 
 @auth.route('/api/v2/auth/reset-password', methods=['PUT'])
-def reset_pass():
-    """Handle POST request for this view. Url ---> /api/v2/auth/reset-password"""
-
-    # get the access token from the authorization header
-    auth_header = request.headers.get('Authorization')
-    access_token = auth_header
-
-    if access_token:
-        # Get the user id related to this access token
-        user_id = User.decode_token(access_token)
-
-        if not isinstance(user_id, str):
-            # User authenticated, proceed...
-            # Get the user object using their id (unique to every user)                
-            user = User.query.filter_by(id=user_id).first()
-            req = request.get_json()
-            npass = req['npassword']
-            cpass = req['cnfpassword']
-            print(npass)
-            # Try to authenticate user id and password fields
-            if user.id==user_id:
-                if npass==cpass:
-                    try:
-                        # Edit the password
-                        user.password = Bcrypt().generate_password_hash(npass).decode()
-                        user.save()
-                        response = {
-                            'message': 'Password changed successfully.'
-                        }
-                    except Exception as e:
-                        # Create a response containing an string error message
-                        response = {
-                            'message': str(e)
-                        }
-                        # Return a server error using the HTTP Error Code 500 (Internal Server Error)
-                        return make_response(jsonify(response)), 500
-                    return make_response(jsonify(response)), 200
-                
-                # Passwords aren't matching. Therefore, we return an error message
-                response = {
-                    'message': 'Enter matching passwords'
-                }
-                return make_response(jsonify(response)), 400
-            
-            # Users can only edit their passwords
-            response = {
-                'message': 'You can only edit your own password'
-            }
-            return make_response(jsonify(response)), 401
-                    
-        # user is not legit, so the payload is an error message
-        message = user_id
-        response = {
-            'message': message
-        }
-        # return an error response, telling the user he is Unauthorized
-        return make_response(jsonify(response)), 401    
+@authorize
+def reset_pass(current_user, user_id):
+    """Handle PUT request for this view. Url ---> /api/v2/auth/reset-password"""                    
+    user = User.query.filter_by(id=user_id).first()
+    req = request.get_json()
+    npass = req['npassword']
+    cpass = req['cnfpassword']
+    print(npass)
+    # Try to authenticate user id and password fields
+    if user.id!=user_id:
+         # Users can only edit their passwords
+        response = {'message': 'You can only edit your own password'}
+        return make_response(jsonify(response)), 401 
+    if npass!=cpass:
+        # Passwords aren't matching. Therefore, we return an error message
+        response = {'message': 'Enter matching passwords'}
+        return make_response(jsonify(response)), 400
+    try:
+        # Edit the password
+        user.password = Bcrypt().generate_password_hash(npass).decode()
+        user.save()
+        response = {'message': 'Password changed successfully.'}
+    except Exception as e:
+        # Create a response containing an string error message
+        response = {'message': str(e)}
+        # Return a server error using the HTTP Error Code 500 (Internal Server Error)
+        return make_response(jsonify(response)), 500
+    return make_response(jsonify(response)), 200
 
 @auth.route('/api/v2/auth/logout', methods=['POST'])
-def logout():
-    # get auth token
-    auth_header = request.headers.get('Authorization')
-    access_token = auth_header
-
-    if access_token:
-        user_id = User.decode_token(access_token)
-        # print(user_id)
-        blacklisted = BlacklistToken.query.filter_by(token=access_token).first()
-        if not blacklisted:
-            if not isinstance(user_id, str):
-                # mark the token as blacklisted                
-                try:
-                    # insert the token
-                    blacklist_token = BlacklistToken(token=access_token)
-                    blacklist_token.save()
-                    response = {
-                        'message': 'Successfully logged out.'
-                    }
-                    return make_response(jsonify(response)), 200
-                except Exception as e:
-                    response = {
-                        'message': e
-                    }
-                    return make_response(jsonify(response)), 200
-            else:
-                response = {
-                    'message': user_id
-                }
-                return make_response(jsonify(response)), 401
-        else:
-            response = {
-                'message': 'You were logged out! TOKEN EXPIRED!'
-            }
-            return make_response(jsonify(response)), 401
-    else:
+@authorize
+def logout(current_user, user_id):
+    access_token = request.headers.get('Authorization')
+    if user_id != User.decode_token(access_token):
+        response = {'message': 'An error occured.'}
+        return make_response(jsonify(response)), 403            
+    try:
+        # insert the token
+        blacklist_token = BlacklistToken(token=access_token)
+        blacklist_token.save()
         response = {
-            'message': 'Ivalid token'
+            'message': 'Successfully logged out.'
         }
-        return make_response(jsonify(response)), 403
+        return make_response(jsonify(response)), 200
+    except Exception as e:
+        response = {
+            'message': e
+        }
+        return make_response(jsonify(response)), 200            
