@@ -32,12 +32,12 @@ class AuthTestCase(unittest.TestCase):
             db.drop_all()
             db.create_all()
 
-    def register_user(self, data):        
+    def register_user(self, data):
         return self.client().post('api/v2/auth/register', data=json.dumps(data), content_type='application/json' )
 
     def login_user(self, data):
         return self.client().post('/api/v2/auth/login', data=json.dumps(data), content_type='application/json' )
-    
+        
     def test_registration(self):
         """Test user registration works correcty."""
         res = self.register_user(self.user_data)
@@ -186,8 +186,7 @@ class AuthTestCase(unittest.TestCase):
         res = self.login_user(not_a_user)
         # get the result in json
         result = json.loads(res.data.decode())
-
-        # assert that this response must contain an error message 
+        # assert that this response must contain an error message
         # and an error status code 401(Unauthorized)
         self.assertEqual(res.status_code, 401)
         self.assertEqual(
@@ -227,10 +226,10 @@ class AuthTestCase(unittest.TestCase):
     def test_successful_logout(self):
         """Test if a user can successfully logout"""
         # Get token
-        access_token = self.get_token()        
+        access_token = self.get_token()
         # Logout user
-        res = self.client().post('/api/v2/auth/logout', headers=dict(Authorization=access_token),  
-            content_type='application/json')    
+        res = self.client().post('/api/v2/auth/logout', headers=dict(Authorization=access_token),
+        content_type='application/json')
         self.assertEqual(res.status_code, 200)
         result = json.loads(res.data.decode())
         self.assertIn('Successfully logged out.', result['message'])
