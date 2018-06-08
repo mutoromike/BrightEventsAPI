@@ -17,6 +17,7 @@ def authorize(f):
         access_token = request.headers.get('Authorization')
         blacklisted = BlacklistToken.query.filter_by(token=access_token).first()
         user_id = User.decode_token(access_token)
+
         # Check if the token is blacklisted
         if blacklisted:
             response = {"message": "Logged out. Please login again!" }
@@ -30,7 +31,7 @@ def authorize(f):
                 response = {"message": "One or more event attributes are missing!"}
                 return make_response(jsonify(response)), 500
         
-        msg = {'message': 'Invalid token or Token has expired'}
+        msg = {'message': 'Invalid token or Token has expired! PLEASE LOGIN!'}
         return make_response(jsonify(msg)), 401
     return check
 
@@ -76,7 +77,8 @@ def create(current_user, user_id, limit=4, page=1):
         response = jsonify({
             'id': created_event.id, 'name' : created_event.name, 'category' : created_event.category,
             'location' : created_event.location, 'date' : created_event.date,
-            'description' : created_event.description, 'created_by' : created_event.created_by
+            'description' : created_event.description, 'created_by' : created_event.created_by,
+            'message': 'Event successfully created'
         })
     except KeyError:
         response = {"message": "There was an error creating the event, please try again"}
@@ -87,7 +89,7 @@ def create(current_user, user_id, limit=4, page=1):
 @events.route('/api/v2/events/page=<int:page>', methods=['GET'])
 @events.route('/api/v2/events/page=<int:page>&limit=<int:limit>', methods=['GET'])
 @authorize
-def my_events(current_user, user_id, limit=4, page=1):
+def my_events(current_user, user_id, limit=2000, page=1):
     # GET
     events = Events.query.filter_by(created_by=user_id).paginate(page, per_page = limit, \
     error_out=True).items
@@ -172,7 +174,7 @@ def rsvp(current_user, user_id, event_id):
         # current_user = User.query.filter_by(id=user_id).first()
         # print(current_user)
         result = event.create_reservation(current_user)
-        print(result)
+        # print(result)
         if result == "Reservation Created":
             return jsonify({"message" : "RSVP Successful"}), 201
         return jsonify({"message" : "Reservation already created!"}), 302
@@ -189,13 +191,14 @@ def rsvp(current_user, user_id, event_id):
     for user in guests:
         new= { "username" : user.username, "email" : user.email }
         attending_visitors.append(new)
-        return make_response(jsonify(attending_visitors)), 200
+        print('attending visitors are', attending_visitors)
+    return make_response(jsonify(attending_visitors)), 200
         	
 
 @events.route('/api/v2/events/all', methods=['GET'])
 @events.route('/api/v2/events/all/page=<int:page>', methods=['GET'])
 @events.route('/api/v2/events/all/page=<int:page>&limit=<int:limit>', methods=['GET'])
-def all_events(limit=4, page=1):
+def all_events(limit=2000, page=1):
     """Get all events in the system, no login required"""
     events = Events.query.paginate(page, per_page = limit, error_out=False).items
     results = []

@@ -57,7 +57,7 @@ def register():
     if user:
         # User already exists. Skip registration
         response = {'message': 'User already exists. Please login.'}
-        return make_response(jsonify(response)), 202
+        return make_response(jsonify(response)), 199
     try:
         # Register the user
         user = User(username=username, email=email, password=password)
@@ -148,4 +148,4 @@ def logout(current_user, user_id):
         response = {
             'message': e
         }
-        return make_response(jsonify(response)), 200            
+        return make_response(jsonify(response)), 400            

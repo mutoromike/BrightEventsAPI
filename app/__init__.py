@@ -1,6 +1,7 @@
 """ app/__init__.py """
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
+from flask_cors import CORS
 from config import app_config
 import re
 
@@ -13,6 +14,7 @@ def create_app(config_name):
 	app.config.from_object(app_config[config_name])
 	app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 	db.init_app(app)
+	cors = CORS(app)
 
 	from .auth import auth
 	from .events import events
