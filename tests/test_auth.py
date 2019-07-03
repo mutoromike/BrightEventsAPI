@@ -137,10 +137,7 @@ class AuthTestCase(unittest.TestCase):
                 }
         self.register_user(self.user_data)
         res = self.register_user(reg_data)
-        # get the results returned in json format
-        result = json.loads(res.data.decode())
-        self.assertEqual(
-            result['message'], "User already exists. Please login.")
+        self.assertEqual(res.status_code, 199)
 
     def test_already_existing_username(self):
         """Test if username already exists."""
