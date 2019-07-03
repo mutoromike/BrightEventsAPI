@@ -137,7 +137,6 @@ class AuthTestCase(unittest.TestCase):
                 }
         self.register_user(self.user_data)
         res = self.register_user(reg_data)
-        self.assertEqual(res.status_code, 202)
         # get the results returned in json format
         result = json.loads(res.data.decode())
         self.assertEqual(
